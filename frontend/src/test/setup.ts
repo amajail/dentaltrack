@@ -1,7 +1,8 @@
 import '@testing-library/jest-dom'
+import { vi } from 'vitest'
 
 // Mock SVG imports
-vi.mock('/vite.svg', () => ({
+vi.mock('./assets/vite.svg', () => ({
   default: 'test-file-stub',
 }))
 
