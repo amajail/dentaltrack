@@ -84,6 +84,7 @@
   },
   "scripts": {
     "test": "hereby runtests-parallel --light=false",
+    "test:coverage": "c8 hereby runtests-parallel --light=false",
     "test:eslint-rules": "hereby run-eslint-rules-tests",
     "build": "npm run build:compiler && npm run build:tests",
     "build:compiler": "hereby local",
