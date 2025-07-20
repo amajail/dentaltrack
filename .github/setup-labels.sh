@@ -23,14 +23,14 @@ gh label create "medical" --color "e83e8c" --description "Medical or clinical fu
 
 # Epic Labels  
 echo "Creating Epic labels..."
-gh label create "epic: setup" --color "6c757d" --description "Setup and configuration epic"
-gh label create "epic: api" --color "007bff" --description "Backend API epic"
-gh label create "epic: react" --color "17a2b8" --description "React frontend epic" 
-gh label create "epic: auth" --color "ffc107" --description "Authentication epic"
-gh label create "epic: patients" --color "28a745" --description "Patient management epic"
-gh label create "epic: photos" --color "fd7e14" --description "Photo management epic"
-gh label create "epic: ai" --color "6f42c1" --description "AI analysis epic"
-gh label create "epic: reports" --color "e83e8c" --description "Reports and analytics epic"
+gh label create "epic: setup" --color "6c757d" --description "Epic 1: Setup and configuration"
+gh label create "epic: api" --color "007bff" --description "Epic 2: Backend Web API"
+gh label create "epic: react" --color "17a2b8" --description "Epic 3: React Web App" 
+gh label create "epic: auth" --color "ffc107" --description "Epic 6: Authentication"
+gh label create "epic: patients" --color "28a745" --description "Epic 7: Patient management"
+gh label create "epic: photos" --color "fd7e14" --description "Epic 8: Photo management"
+gh label create "epic: ai" --color "6f42c1" --description "Epic 9: AI analysis"
+gh label create "epic: reports" --color "e83e8c" --description "Epic 10: Reports and analytics"
 
 # Status Labels
 echo "Creating Status labels..."
