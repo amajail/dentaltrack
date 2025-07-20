@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Base de datos SQL Server
+  dentaltrack-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: dentaltrack-sqlserver
+    environment:
+      SA_PASSWORD: "DentalTrack123!"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - dentaltrack_data:/var/opt/mssql
+    networks:
+      - dentaltrack-network
+
+  # Backend API
+  dentaltrack-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dentaltrack-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=dentaltrack-db;Database=DentalTrackDB;User Id=sa;Password=DentalTrack123!;TrustServerCertificate=true;
+    ports:
+      - "5000:8080"
+    depends_on:
+      - dentaltrack-db
+    networks:
+      - dentaltrack-network
+
+  # Frontend Web
+  dentaltrack-web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dentaltrack-web
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - dentaltrack-api
+    networks:
+      - dentaltrack-network
+
+  # Redis para caché y sesiones
+  dentaltrack-redis:
+    image: redis:7-alpine
+    container_name: dentaltrack-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - dentaltrack_redis:/data
+    networks:
+      - dentaltrack-network
+
+volumes:
+  dentaltrack_data:
+  dentaltrack_redis:
+
+networks:
+  dentaltrack-network:
+    driver: bridge

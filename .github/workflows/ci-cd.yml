@@ -1,0 +1,174 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '20.x'
+
+jobs:
+  # Backend Tests
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore
+    
+    - name: Test
+      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage"
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      with:
+        directory: ./backend/tests/*/TestResults
+        flags: backend
+
+  # Frontend Tests
+  frontend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Lint
+      run: npm run lint
+    
+    - name: Type check
+      run: npm run type-check
+    
+    - name: Test
+      run: npm run test:coverage
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      with:
+        directory: ./frontend/coverage
+        flags: frontend
+
+  # Mobile Tests
+  mobile-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./mobile
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: './mobile/package-lock.json'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Lint
+      run: npm run lint
+    
+    - name: Type check
+      run: npm run type-check
+
+  # Build and Deploy
+  build-deploy:
+    needs: [backend-test, frontend-test, mobile-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    # Backend Build
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Build Backend
+      run: |
+        cd backend
+        dotnet publish src/DentalTrack.Api/DentalTrack.Api.csproj -c Release -o ./publish
+    
+    # Frontend Build
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+    
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm ci
+        npm run build
+    
+    # Docker Build and Push (example for future deployment)
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      if: env.DOCKERHUB_USERNAME != null
+    
+    - name: Build and push Docker images
+      run: |
+        if [ ! -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+          docker buildx build --platform linux/amd64,linux/arm64 -t ${{ secrets.DOCKERHUB_USERNAME }}/dentaltrack-api:latest ./backend --push
+          docker buildx build --platform linux/amd64,linux/arm64 -t ${{ secrets.DOCKERHUB_USERNAME }}/dentaltrack-web:latest ./frontend --push
+        fi
+
+  # Security Scan
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
