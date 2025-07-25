@@ -1,33 +1,29 @@
-# 🔧 DentalTrack Backend
+# DentalTrack Backend - Clean Architecture Implementation
 
-API REST desarrollada en .NET 8 con Clean Architecture para el sistema DentalTrack.
+## 🎯 US-005 Implementation Status: ✅ COMPLETED
 
-## 🏗️ Arquitectura
+This implementation provides a complete Clean Architecture backend for the DentalTrack dental practice management system.
+
+## 🏗️ Architecture Overview
 
 ```
-backend/
-├── src/
-│   ├── DentalTrack.Api/          # 🌐 Presentation Layer
-│   │   ├── Controllers/          # API Controllers
-│   │   ├── Models/              # Request/Response models
-│   │   └── Services/            # API-specific services
-│   ├── DentalTrack.Application/ # 📋 Application Layer
-│   │   ├── Commands/            # CQRS Commands (MediatR)
-│   │   ├── Queries/             # CQRS Queries (MediatR)
-│   │   ├── DTOs/                # Data Transfer Objects
-│   │   ├── Interfaces/          # Application interfaces
-│   │   └── Services/            # Application services
-│   ├── DentalTrack.Domain/      # 💎 Domain Layer
-│   │   ├── Entities/            # Domain entities
-│   │   ├── ValueObjects/        # Value objects
-│   │   ├── Interfaces/          # Domain interfaces
-│   │   └── Events/              # Domain events
-│   └── DentalTrack.Infrastructure/ # 🔧 Infrastructure Layer
-│       ├── Data/                # Entity Framework DbContext
-│       ├── Services/            # External services
-│       ├── Repositories/        # Data access implementations
-│       └── Configurations/      # EF configurations
-└── tests/                       # 🧪 Test projects
+backend/src/
+├── DentalTrack.Domain/          # Core business logic & entities
+│   ├── Entities/               # Patient, Treatment, Photo, Analysis
+│   ├── ValueObjects/           # Enums and value types
+│   └── Interfaces/             # Repository contracts
+├── DentalTrack.Application/     # Use cases & business rules
+│   ├── DTOs/                   # Data transfer objects
+│   ├── Commands/               # CQRS commands
+│   ├── Queries/                # CQRS queries
+│   ├── Handlers/               # MediatR handlers
+│   └── Mappings/               # AutoMapper profiles
+├── DentalTrack.Infrastructure/  # Data access & external services
+│   ├── Data/                   # EF Core DbContext
+│   └── Repositories/           # Repository implementations
+└── DentalTrack.Api/            # REST API endpoints
+    ├── Controllers/            # API controllers
+    └── Middleware/             # Error handling, etc.
 ```
 
 ## 🚀 Quick Start
