@@ -20,6 +20,7 @@ public class PatientTests
             _validEmail,
             _validDateOfBirth,
             "555-1234",
+            "Male",
             "123 Main St",
             "Jane Doe",
             "555-5678",
@@ -32,6 +33,7 @@ public class PatientTests
         patient.Email.Should().Be(_validEmail);
         patient.DateOfBirth.Should().Be(_validDateOfBirth);
         patient.Phone.Should().Be("555-1234");
+        patient.Gender.Should().Be("Male");
         patient.Address.Should().Be("123 Main St");
         patient.EmergencyContact.Should().Be("Jane Doe");
         patient.EmergencyPhone.Should().Be("555-5678");

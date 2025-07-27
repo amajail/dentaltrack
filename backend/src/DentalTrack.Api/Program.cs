@@ -37,6 +37,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Creat
 // builder.Services.AddFluentValidationAutoValidation();
 
 // Add repositories and Unit of Work
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<ITreatmentRepository, TreatmentRepository>();
 builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
@@ -115,19 +116,24 @@ app.MapHealthChecks("/health/live", new()
     Predicate = _ => false
 });
 
-// Auto-migrate database in development
+// Auto-migrate database and seed data in development
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<DentalTrackDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<DataSeeder>>();
+    
     try
     {
-        context.Database.EnsureCreated();
-        Log.Information("Database ensured created successfully");
+        context.Database.Migrate();
+        Log.Information("Database migrations applied successfully");
+        
+        var seeder = new DataSeeder(context, logger);
+        await seeder.SeedAsync();
     }
     catch (Exception ex)
     {
-        Log.Error(ex, "An error occurred while creating the database");
+        Log.Error(ex, "An error occurred while setting up the database");
     }
 }
 

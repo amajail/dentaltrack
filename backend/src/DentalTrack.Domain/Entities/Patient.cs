@@ -7,6 +7,7 @@ public class Patient : BaseEntity
     public string Email { get; private set; }
     public string? Phone { get; private set; }
     public DateTime DateOfBirth { get; private set; }
+    public string? Gender { get; private set; }
     public string? Address { get; private set; }
     public string? EmergencyContact { get; private set; }
     public string? EmergencyPhone { get; private set; }
@@ -24,6 +25,7 @@ public class Patient : BaseEntity
         string email,
         DateTime dateOfBirth,
         string? phone = null,
+        string? gender = null,
         string? address = null,
         string? emergencyContact = null,
         string? emergencyPhone = null,
@@ -44,6 +46,7 @@ public class Patient : BaseEntity
         Email = email;
         DateOfBirth = dateOfBirth;
         Phone = phone;
+        Gender = gender;
         Address = address;
         EmergencyContact = emergencyContact;
         EmergencyPhone = emergencyPhone;

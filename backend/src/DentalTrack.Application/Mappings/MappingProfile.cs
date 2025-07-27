@@ -20,6 +20,7 @@ public class MappingProfile : Profile
                 src.Email,
                 src.DateOfBirth,
                 src.Phone,
+                src.Gender,
                 src.Address,
                 src.EmergencyContact,
                 src.EmergencyPhone,
