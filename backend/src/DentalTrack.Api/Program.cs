@@ -1,10 +1,6 @@
 using DentalTrack.Api.Middleware;
-using DentalTrack.Application.Handlers.Patients;
-using DentalTrack.Application.Mappings;
-using DentalTrack.Domain.Interfaces;
-using DentalTrack.Infrastructure.Data;
-using DentalTrack.Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
+using DentalTrack.Application;
+using DentalTrack.Infrastructure;
 using Serilog;
 using System.Reflection;
 
@@ -23,29 +19,9 @@ builder.Host.UseSerilog();
 // Add services to the container
 builder.Services.AddControllers();
 
-// Add Entity Framework
-builder.Services.AddDbContext<DentalTrackDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Add AutoMapper
-builder.Services.AddAutoMapper(typeof(MappingProfile));
-
-// Add MediatR
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CreatePatientHandler).Assembly));
-
-// Add FluentValidation (if needed - comment out if not available)
-// builder.Services.AddFluentValidationAutoValidation();
-
-// Add repositories and Unit of Work
-builder.Services.AddScoped<IPatientRepository, PatientRepository>();
-builder.Services.AddScoped<ITreatmentRepository, TreatmentRepository>();
-builder.Services.AddScoped<IPhotoRepository, PhotoRepository>();
-builder.Services.AddScoped<IAnalysisRepository, AnalysisRepository>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
-// Add Health Checks
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<DentalTrackDbContext>();
+// Add layer dependencies
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -115,20 +91,10 @@ app.MapHealthChecks("/health/live", new()
     Predicate = _ => false
 });
 
-// Auto-migrate database in development
+// Auto-migrate database and seed data in development
 if (app.Environment.IsDevelopment())
 {
-    using var scope = app.Services.CreateScope();
-    var context = scope.ServiceProvider.GetRequiredService<DentalTrackDbContext>();
-    try
-    {
-        context.Database.EnsureCreated();
-        Log.Information("Database ensured created successfully");
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "An error occurred while creating the database");
-    }
+    await app.Services.ApplyMigrationsAndSeedAsync();
 }
 
 Log.Information("DentalTrack API starting up...");

@@ -16,12 +16,14 @@ public class UnitOfWork : IUnitOfWork
         Treatments = new TreatmentRepository(_context);
         Photos = new PhotoRepository(_context);
         Analyses = new AnalysisRepository(_context);
+        Users = new UserRepository(_context);
     }
 
     public IPatientRepository Patients { get; }
     public ITreatmentRepository Treatments { get; }
     public IPhotoRepository Photos { get; }
     public IAnalysisRepository Analyses { get; }
+    public IUserRepository Users { get; }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

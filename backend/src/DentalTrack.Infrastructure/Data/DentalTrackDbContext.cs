@@ -15,6 +15,7 @@ public class DentalTrackDbContext : DbContext
     public DbSet<Treatment> Treatments => Set<Treatment>();
     public DbSet<Photo> Photos => Set<Photo>();
     public DbSet<Analysis> Analyses => Set<Analysis>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,7 +29,11 @@ public class DentalTrackDbContext : DbContext
             entity.Property(p => p.LastName).IsRequired().HasMaxLength(100);
             entity.Property(p => p.Email).IsRequired().HasMaxLength(255);
             entity.HasIndex(p => p.Email).IsUnique();
+            entity.HasIndex(p => p.IsActive).HasDatabaseName("IX_Patients_IsActive");
+            entity.HasIndex(p => new { p.LastName, p.FirstName }).HasDatabaseName("IX_Patients_Name");
+            entity.HasIndex(p => p.CreatedAt).HasDatabaseName("IX_Patients_CreatedAt");
             entity.Property(p => p.Phone).HasMaxLength(20);
+            entity.Property(p => p.Gender).HasMaxLength(10);
             entity.Property(p => p.Address).HasMaxLength(500);
             entity.Property(p => p.EmergencyContact).HasMaxLength(100);
             entity.Property(p => p.EmergencyPhone).HasMaxLength(20);
@@ -132,26 +137,93 @@ public class DentalTrackDbContext : DbContext
             entity.Property(a => a.UpdatedAt);
         });
 
+        // Configure User entity
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.Email).IsRequired().HasMaxLength(255);
+            entity.HasIndex(u => u.Email).IsUnique();
+            entity.Property(u => u.GoogleId).HasMaxLength(100);
+            entity.HasIndex(u => u.GoogleId).IsUnique();
+            entity.Property(u => u.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(u => u.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(u => u.Role).IsRequired().HasConversion<int>();
+            entity.Property(u => u.IsActive).IsRequired();
+            entity.Property(u => u.LastLoginAt);
+            entity.Property(u => u.CreatedAt).IsRequired();
+            entity.Property(u => u.UpdatedAt);
+        });
+
         // Configure indexes for better query performance
         modelBuilder.Entity<Patient>()
             .HasIndex(p => new { p.FirstName, p.LastName });
 
         modelBuilder.Entity<Treatment>()
-            .HasIndex(t => t.Status);
+            .HasIndex(t => t.Status).HasDatabaseName("IX_Treatments_Status");
 
         modelBuilder.Entity<Treatment>()
-            .HasIndex(t => t.Type);
+            .HasIndex(t => t.Type).HasDatabaseName("IX_Treatments_Type");
+
+        modelBuilder.Entity<Treatment>()
+            .HasIndex(t => t.StartDate).HasDatabaseName("IX_Treatments_StartDate");
+
+        modelBuilder.Entity<Treatment>()
+            .HasIndex(t => new { t.PatientId, t.Status }).HasDatabaseName("IX_Treatments_PatientId_Status");
 
         modelBuilder.Entity<Photo>()
-            .HasIndex(p => p.Type);
+            .HasIndex(p => p.Type).HasDatabaseName("IX_Photos_Type");
 
         modelBuilder.Entity<Photo>()
-            .HasIndex(p => p.Quality);
+            .HasIndex(p => p.Quality).HasDatabaseName("IX_Photos_Quality");
+
+        modelBuilder.Entity<Photo>()
+            .HasIndex(p => p.TreatmentId).HasDatabaseName("IX_Photos_TreatmentId");
+
+        modelBuilder.Entity<Photo>()
+            .HasIndex(p => p.IsProcessed).HasDatabaseName("IX_Photos_IsProcessed");
 
         modelBuilder.Entity<Analysis>()
-            .HasIndex(a => a.Type);
+            .HasIndex(a => a.Type).HasDatabaseName("IX_Analyses_Type");
 
         modelBuilder.Entity<Analysis>()
-            .HasIndex(a => a.Status);
+            .HasIndex(a => a.Status).HasDatabaseName("IX_Analyses_Status");
+
+        modelBuilder.Entity<Analysis>()
+            .HasIndex(a => a.PhotoId).HasDatabaseName("IX_Analyses_PhotoId");
+
+        modelBuilder.Entity<Analysis>()
+            .HasIndex(a => a.CompletedAt).HasDatabaseName("IX_Analyses_CompletedAt");
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Role).HasDatabaseName("IX_Users_Role");
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.IsActive).HasDatabaseName("IX_Users_IsActive");
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.LastLoginAt).HasDatabaseName("IX_Users_LastLoginAt");
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var entries = ChangeTracker
+            .Entries()
+            .Where(e => e.Entity is BaseEntity && (e.State == EntityState.Added || e.State == EntityState.Modified));
+
+        foreach (var entityEntry in entries)
+        {
+            var entity = (BaseEntity)entityEntry.Entity;
+            
+            if (entityEntry.State == EntityState.Added)
+            {
+                entity.SetCreatedAt();
+            }
+            else if (entityEntry.State == EntityState.Modified)
+            {
+                entity.SetUpdatedAt();
+            }
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
     }
 }
