@@ -75,4 +75,51 @@ public class TreatmentRepository : Repository<Treatment>, ITreatmentRepository
             .OrderBy(t => t.StartDate)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<(IList<Treatment> Items, int TotalCount)> GetPagedAsync(
+        int page, 
+        int pageSize, 
+        Guid? patientId = null, 
+        string? status = null, 
+        string? sortBy = null, 
+        bool sortDescending = false, 
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbSet.Include(t => t.Patient).AsQueryable();
+
+        // Apply patient filter
+        if (patientId.HasValue)
+        {
+            query = query.Where(t => t.PatientId == patientId.Value);
+        }
+
+        // Apply status filter
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<TreatmentStatus>(status, true, out var statusEnum))
+        {
+            query = query.Where(t => t.Status == statusEnum);
+        }
+
+        // Get total count before pagination
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply sorting
+        query = sortBy?.ToLower() switch
+        {
+            "startdate" => sortDescending ? query.OrderByDescending(t => t.StartDate) : query.OrderBy(t => t.StartDate),
+            "enddate" => sortDescending ? query.OrderByDescending(t => t.EndDate) : query.OrderBy(t => t.EndDate),
+            "status" => sortDescending ? query.OrderByDescending(t => t.Status) : query.OrderBy(t => t.Status),
+            "type" => sortDescending ? query.OrderByDescending(t => t.Type) : query.OrderBy(t => t.Type),
+            "patientname" => sortDescending ? query.OrderByDescending(t => t.Patient.LastName) : query.OrderBy(t => t.Patient.LastName),
+            "createdat" => sortDescending ? query.OrderByDescending(t => t.CreatedAt) : query.OrderBy(t => t.CreatedAt),
+            _ => sortDescending ? query.OrderByDescending(t => t.StartDate) : query.OrderBy(t => t.StartDate)
+        };
+
+        // Apply pagination
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
 }
