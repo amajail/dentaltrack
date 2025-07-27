@@ -1,4 +1,5 @@
 using AutoMapper;
+using DentalTrack.Application.Common;
 using DentalTrack.Application.DTOs;
 using DentalTrack.Application.Handlers.Patients;
 using DentalTrack.Application.Mappings;
@@ -31,7 +32,7 @@ public class GetAllPatientsHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithExistingPatients_ShouldReturnPatientDtos()
+    public async Task Handle_WithExistingPatients_ShouldReturnPagedPatientDtos()
     {
         // Arrange
         var patients = new List<Patient>
@@ -41,20 +42,29 @@ public class GetAllPatientsHandlerTests
             new("Bob", "Johnson", "bob@example.com", new DateTime(1975, 12, 10))
         };
 
-        var query = new GetAllPatientsQuery();
+        var query = new GetAllPatientsQuery { Page = 1, PageSize = 10 };
 
         _mockPatientRepository
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(patients);
+            .Setup(x => x.GetPagedAsync(
+                It.IsAny<int>(), 
+                It.IsAny<int>(), 
+                It.IsAny<string>(), 
+                It.IsAny<string>(), 
+                It.IsAny<bool>(), 
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((patients, 3));
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
-        result.Should().HaveCount(3);
+        result.Items.Should().HaveCount(3);
+        result.TotalCount.Should().Be(3);
+        result.Page.Should().Be(1);
+        result.PageSize.Should().Be(10);
 
-        var resultList = result.ToList();
+        var resultList = result.Items.ToList();
         resultList[0].FirstName.Should().Be("John");
         resultList[0].LastName.Should().Be("Doe");
         resultList[0].Email.Should().Be("john@example.com");
@@ -71,30 +81,51 @@ public class GetAllPatientsHandlerTests
         resultList[2].FullName.Should().Be("Bob Johnson");
 
         _mockPatientRepository.Verify(
-            x => x.GetAllAsync(It.IsAny<CancellationToken>()),
+            x => x.GetPagedAsync(
+                query.Page, 
+                query.PageSize, 
+                query.Search, 
+                query.SortBy, 
+                query.SortDescending, 
+                It.IsAny<CancellationToken>()), 
             Times.Once);
     }
 
     [Fact]
-    public async Task Handle_WithNoPatients_ShouldReturnEmptyCollection()
+    public async Task Handle_WithNoPatients_ShouldReturnEmptyPagedResult()
     {
         // Arrange
         var patients = new List<Patient>();
-        var query = new GetAllPatientsQuery();
+        var query = new GetAllPatientsQuery { Page = 1, PageSize = 10 };
 
         _mockPatientRepository
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(patients);
+            .Setup(x => x.GetPagedAsync(
+                It.IsAny<int>(), 
+                It.IsAny<int>(), 
+                It.IsAny<string>(), 
+                It.IsAny<string>(), 
+                It.IsAny<bool>(), 
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((patients, 0));
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
-        result.Should().BeEmpty();
+        result.Items.Should().BeEmpty();
+        result.TotalCount.Should().Be(0);
+        result.Page.Should().Be(1);
+        result.PageSize.Should().Be(10);
 
         _mockPatientRepository.Verify(
-            x => x.GetAllAsync(It.IsAny<CancellationToken>()),
+            x => x.GetPagedAsync(
+                query.Page, 
+                query.PageSize, 
+                query.Search, 
+                query.SortBy, 
+                query.SortDescending, 
+                It.IsAny<CancellationToken>()), 
             Times.Once);
     }
 
@@ -115,17 +146,23 @@ public class GetAllPatientsHandlerTests
             "Allergies");
 
         var patients = new List<Patient> { patient };
-        var query = new GetAllPatientsQuery();
+        var query = new GetAllPatientsQuery { Page = 1, PageSize = 10 };
 
         _mockPatientRepository
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(patients);
+            .Setup(x => x.GetPagedAsync(
+                It.IsAny<int>(), 
+                It.IsAny<int>(), 
+                It.IsAny<string>(), 
+                It.IsAny<string>(), 
+                It.IsAny<bool>(), 
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((patients, 1));
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        var patientDto = result.First();
+        var patientDto = result.Items.First();
         patientDto.Should().NotBeNull();
         patientDto.Id.Should().Be(patient.Id);
         patientDto.FirstName.Should().Be(patient.FirstName);
@@ -145,28 +182,41 @@ public class GetAllPatientsHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WithMixedActiveStatus_ShouldReturnAllPatients()
+    public async Task Handle_WithPaginationParameters_ShouldPassCorrectParameters()
     {
         // Arrange
-        var activePatient = new Patient("Active", "Patient", "active@example.com", new DateTime(1985, 1, 1));
-        var inactivePatient = new Patient("Inactive", "Patient", "inactive@example.com", new DateTime(1985, 1, 1));
-        inactivePatient.Deactivate();
-
-        var patients = new List<Patient> { activePatient, inactivePatient };
-        var query = new GetAllPatientsQuery();
+        var patients = new List<Patient>();
+        var query = new GetAllPatientsQuery 
+        { 
+            Page = 2, 
+            PageSize = 5,
+            Search = "John",
+            SortBy = "FirstName",
+            SortDescending = true
+        };
 
         _mockPatientRepository
-            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(patients);
+            .Setup(x => x.GetPagedAsync(
+                It.IsAny<int>(), 
+                It.IsAny<int>(), 
+                It.IsAny<string>(), 
+                It.IsAny<string>(), 
+                It.IsAny<bool>(), 
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((patients, 0));
 
         // Act
-        var result = await _handler.Handle(query, CancellationToken.None);
+        await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.Should().HaveCount(2);
-
-        var resultList = result.ToList();
-        resultList.Should().Contain(p => p.IsActive == true);
-        resultList.Should().Contain(p => p.IsActive == false);
+        _mockPatientRepository.Verify(
+            x => x.GetPagedAsync(
+                2,          // page
+                5,          // pageSize
+                "John",     // search
+                "FirstName", // sortBy
+                true,       // sortDescending
+                It.IsAny<CancellationToken>()), 
+            Times.Once);
     }
 }

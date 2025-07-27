@@ -43,16 +43,27 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "DentalTrack API",
         Version = "v1",
-        Description = "A dental practice management system API built with Clean Architecture"
+        Description = "A comprehensive dental practice management system API built with Clean Architecture. " +
+                     "Provides endpoints for managing patients, treatments, photos, and AI-powered dental analysis.",
+        Contact = new() { Name = "DentalTrack Team", Email = "support@dentaltrack.com" },
+        License = new() { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
     });
-
-    // Include XML comments
+    
+    // Include XML comments for better documentation
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
     {
         c.IncludeXmlComments(xmlPath);
     }
+
+    // Add response examples and better schemas
+    c.EnableAnnotations();
+    c.UseInlineDefinitionsForEnums();
+    
+    // Group endpoints by tags
+    c.TagActionsBy(api => new[] { api.GroupName ?? api.ActionDescriptor.RouteValues["controller"] });
+    c.DocInclusionPredicate((name, api) => true);
 });
 
 var app = builder.Build();

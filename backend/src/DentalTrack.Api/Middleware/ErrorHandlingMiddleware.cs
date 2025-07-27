@@ -1,3 +1,4 @@
+using FluentValidation;
 using System.Net;
 using System.Text.Json;
 
@@ -31,49 +32,60 @@ public class ErrorHandlingMiddleware
     {
         context.Response.ContentType = "application/json";
 
-        var response = new ErrorResponse();
+        var response = context.Response;
+        var errorResponse = new ErrorResponse();
 
         switch (exception)
         {
-            case ArgumentException:
-            case InvalidOperationException:
-                response.Message = exception.Message;
+            case ValidationException validationEx:
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
-                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                errorResponse.Message = "Validation failed";
+                errorResponse.Details = validationEx.Errors.Select(e => e.ErrorMessage).ToList();
                 break;
 
-            case KeyNotFoundException:
-                response.Message = "Resource not found";
+            case ArgumentException argEx:
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                errorResponse.Message = argEx.Message;
+                break;
+
+            case KeyNotFoundException keyNotFoundEx:
                 response.StatusCode = (int)HttpStatusCode.NotFound;
-                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                errorResponse.Message = keyNotFoundEx.Message;
                 break;
 
-            case UnauthorizedAccessException:
-                response.Message = "Unauthorized access";
+            case UnauthorizedAccessException unauthorizedEx:
                 response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                errorResponse.Message = "Unauthorized access";
+                break;
+
+            case InvalidOperationException invalidOpEx:
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                errorResponse.Message = invalidOpEx.Message;
                 break;
 
             default:
-                response.Message = "An internal server error occurred";
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                errorResponse.Message = "An internal server error occurred";
+                errorResponse.Details = new List<string> { exception.Message };
                 break;
         }
 
-        var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions
+        errorResponse.StatusCode = response.StatusCode;
+        errorResponse.Timestamp = DateTime.UtcNow;
+
+        var jsonResponse = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
 
-        await context.Response.WriteAsync(jsonResponse);
+        await response.WriteAsync(jsonResponse);
     }
 }
 
 public class ErrorResponse
 {
-    public string Message { get; set; } = string.Empty;
     public int StatusCode { get; set; }
-    public string Details { get; set; } = string.Empty;
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public string Message { get; set; } = string.Empty;
+    public List<string>? Details { get; set; }
+    public DateTime Timestamp { get; set; }
 }
