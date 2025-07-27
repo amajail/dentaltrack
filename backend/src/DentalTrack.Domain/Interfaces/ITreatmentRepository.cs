@@ -13,4 +13,12 @@ public interface ITreatmentRepository : IRepository<Treatment>
     Task<Treatment?> GetWithPhotosAsync(Guid treatmentId, CancellationToken cancellationToken = default);
     Task<Treatment?> GetWithAnalysesAsync(Guid treatmentId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Treatment>> GetUpcomingTreatmentsAsync(int days = 7, CancellationToken cancellationToken = default);
+    Task<(IList<Treatment> Items, int TotalCount)> GetPagedAsync(
+        int page, 
+        int pageSize, 
+        Guid? patientId = null, 
+        string? status = null, 
+        string? sortBy = null, 
+        bool sortDescending = false, 
+        CancellationToken cancellationToken = default);
 }

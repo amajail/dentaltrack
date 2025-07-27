@@ -47,4 +47,47 @@ public class PatientRepository : Repository<Patient>, IPatientRepository
 
         return await query.AnyAsync(cancellationToken);
     }
+
+    public async Task<(IList<Patient> Items, int TotalCount)> GetPagedAsync(
+        int page, 
+        int pageSize, 
+        string? search = null, 
+        string? sortBy = null, 
+        bool sortDescending = false, 
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbSet.Where(p => p.IsActive);
+
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(p => 
+                p.FirstName.Contains(search) || 
+                p.LastName.Contains(search) || 
+                p.Email.Contains(search) ||
+                p.Phone.Contains(search));
+        }
+
+        // Get total count before pagination
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply sorting
+        query = sortBy?.ToLower() switch
+        {
+            "firstname" => sortDescending ? query.OrderByDescending(p => p.FirstName) : query.OrderBy(p => p.FirstName),
+            "lastname" => sortDescending ? query.OrderByDescending(p => p.LastName) : query.OrderBy(p => p.LastName),
+            "email" => sortDescending ? query.OrderByDescending(p => p.Email) : query.OrderBy(p => p.Email),
+            "dateofbirth" => sortDescending ? query.OrderByDescending(p => p.DateOfBirth) : query.OrderBy(p => p.DateOfBirth),
+            "createdat" => sortDescending ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
+            _ => sortDescending ? query.OrderByDescending(p => p.LastName) : query.OrderBy(p => p.LastName)
+        };
+
+        // Apply pagination
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
 }
