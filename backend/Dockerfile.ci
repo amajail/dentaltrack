@@ -1,0 +1,45 @@
+# Multi-stage Docker build for CI testing
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy csproj files and restore dependencies
+COPY ["src/DentalTrack.Api/DentalTrack.Api.csproj", "src/DentalTrack.Api/"]
+COPY ["src/DentalTrack.Application/DentalTrack.Application.csproj", "src/DentalTrack.Application/"]
+COPY ["src/DentalTrack.Domain/DentalTrack.Domain.csproj", "src/DentalTrack.Domain/"]
+COPY ["src/DentalTrack.Infrastructure/DentalTrack.Infrastructure.csproj", "src/DentalTrack.Infrastructure/"]
+
+RUN dotnet restore "src/DentalTrack.Api/DentalTrack.Api.csproj"
+
+# Copy everything else and build
+COPY . .
+WORKDIR "/src/src/DentalTrack.Api"
+
+# Build and run tests
+RUN dotnet build "DentalTrack.Api.csproj" -c Release -o /app/build
+
+# Run tests and generate coverage
+WORKDIR /src
+RUN dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory /testresults
+
+FROM build AS publish
+WORKDIR "/src/src/DentalTrack.Api"
+RUN dotnet publish "DentalTrack.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+COPY --from=publish /app/publish .
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost/health || exit 1
+
+ENTRYPOINT ["dotnet", "DentalTrack.Api.dll"]

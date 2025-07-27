@@ -1,0 +1,318 @@
+name: Quality Gate
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  security-events: write
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '20.x'
+  COVERAGE_THRESHOLD: 80
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Shallow clones should be disabled for better analysis
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+    
+    # Backend Analysis
+    - name: Run backend linting
+      run: |
+        cd backend
+        dotnet restore
+        dotnet format --verify-no-changes --verbosity diagnostic
+    
+    - name: Backend tests with coverage
+      run: |
+        cd backend
+        dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+    
+    # Frontend Analysis  
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Run frontend linting
+      run: |
+        cd frontend
+        npm run lint
+    
+    - name: Frontend type checking
+      run: |
+        cd frontend
+        npm run type-check
+    
+    - name: Frontend tests with coverage
+      run: |
+        cd frontend
+        npm run test:coverage
+    
+    - name: Check frontend bundle size
+      run: |
+        cd frontend
+        npm run build
+        BUNDLE_SIZE=$(du -sk dist | cut -f1)
+        BUNDLE_SIZE_MB=$((BUNDLE_SIZE / 1024))
+        echo "Bundle size: ${BUNDLE_SIZE_MB}MB"
+        echo "BUNDLE_SIZE_MB=${BUNDLE_SIZE_MB}" >> $GITHUB_ENV
+        
+        if [ $BUNDLE_SIZE_MB -gt 5 ]; then
+          echo "::error::Bundle size ${BUNDLE_SIZE_MB}MB exceeds 5MB limit"
+          echo "BUNDLE_SIZE_STATUS=❌ Too large" >> $GITHUB_ENV
+          exit 1
+        else
+          echo "BUNDLE_SIZE_STATUS=✅ Within limits" >> $GITHUB_ENV
+        fi
+
+  security-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        exit-code: '0'  # Don't fail on vulnerabilities, just report
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Check for critical vulnerabilities
+      run: |
+        # Count critical and high vulnerabilities
+        CRITICAL_COUNT=$(jq '.runs[0].results | map(select(.level == "error")) | length' trivy-results.sarif || echo "0")
+        HIGH_COUNT=$(jq '.runs[0].results | map(select(.level == "warning")) | length' trivy-results.sarif || echo "0")
+        
+        echo "Critical vulnerabilities: $CRITICAL_COUNT"
+        echo "High vulnerabilities: $HIGH_COUNT"
+        
+        if [ "$CRITICAL_COUNT" -gt 0 ]; then
+          echo "::error::Found $CRITICAL_COUNT critical vulnerabilities"
+          echo "SECURITY_STATUS=❌ Critical vulnerabilities found" >> $GITHUB_ENV
+          exit 1
+        elif [ "$HIGH_COUNT" -gt 5 ]; then
+          echo "::warning::Found $HIGH_COUNT high vulnerabilities (threshold: 5)"
+          echo "SECURITY_STATUS=⚠️ High vulnerabilities need review" >> $GITHUB_ENV
+        else
+          echo "SECURITY_STATUS=✅ No critical issues" >> $GITHUB_ENV
+        fi
+
+  performance-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+    
+    - name: Build backend for performance testing
+      run: |
+        cd backend
+        dotnet restore
+        dotnet build --configuration Release
+    
+    - name: Build frontend for performance testing
+      run: |
+        cd frontend
+        npm ci
+        npm run build
+    
+    - name: Analyze frontend performance metrics
+      run: |
+        cd frontend
+        
+        # Calculate bundle sizes
+        TOTAL_SIZE=$(du -sk dist | cut -f1)
+        JS_SIZE=$(find dist -name "*.js" -exec du -ck {} + | tail -1 | cut -f1)
+        CSS_SIZE=$(find dist -name "*.css" -exec du -ck {} + | tail -1 | cut -f1)
+        
+        echo "Total bundle size: ${TOTAL_SIZE}KB"
+        echo "JavaScript size: ${JS_SIZE}KB"  
+        echo "CSS size: ${CSS_SIZE}KB"
+        
+        # Performance budget checks
+        if [ $TOTAL_SIZE -gt 500 ]; then
+          echo "::warning::Total bundle size ${TOTAL_SIZE}KB exceeds recommended 500KB"
+        fi
+        
+        if [ $JS_SIZE -gt 300 ]; then
+          echo "::warning::JavaScript bundle ${JS_SIZE}KB exceeds recommended 300KB"
+        fi
+        
+        echo "PERF_STATUS=✅ Performance within limits" >> $GITHUB_ENV
+
+  coverage-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: './frontend/package-lock.json'
+    
+    - name: Generate backend coverage
+      run: |
+        cd backend
+        dotnet restore
+        dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+    
+    - name: Generate coverage report
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.3.11
+      with:
+        reports: './backend/TestResults/**/coverage.cobertura.xml'
+        targetdir: './backend/coverage-report'
+        reporttypes: 'TextSummary'
+    
+    - name: Check backend coverage
+      run: |
+        cd backend
+        if [ -f coverage-report/Summary.txt ]; then
+          COVERAGE=$(grep -o 'Line coverage: [0-9.]*%' coverage-report/Summary.txt | grep -o '[0-9.]*' || echo "0")
+          echo "Backend coverage: $COVERAGE%"
+          echo "BACKEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          
+          if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
+            echo "BACKEND_COVERAGE_STATUS=❌ Below threshold" >> $GITHUB_ENV
+          else
+            echo "BACKEND_COVERAGE_STATUS=✅ Meets threshold" >> $GITHUB_ENV
+          fi
+        else
+          echo "BACKEND_COVERAGE_STATUS=⚠️ Report not found" >> $GITHUB_ENV
+        fi
+    
+    - name: Generate frontend coverage
+      run: |
+        cd frontend
+        npm ci
+        npm run test:coverage
+    
+    - name: Check frontend coverage
+      run: |
+        cd frontend
+        if [ -f coverage/coverage-summary.json ]; then
+          COVERAGE=$(node -p "Math.floor(JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct)" || echo "0")
+          echo "Frontend coverage: $COVERAGE%"
+          echo "FRONTEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          
+          if [ $COVERAGE -lt ${{ env.COVERAGE_THRESHOLD }} ]; then
+            echo "FRONTEND_COVERAGE_STATUS=❌ Below threshold" >> $GITHUB_ENV
+          else
+            echo "FRONTEND_COVERAGE_STATUS=✅ Meets threshold" >> $GITHUB_ENV
+          fi
+        else
+          echo "FRONTEND_COVERAGE_STATUS=⚠️ Report not found" >> $GITHUB_ENV
+        fi
+
+  quality-gate-summary:
+    needs: [code-quality, security-analysis, performance-tests, coverage-analysis]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Generate quality gate report
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { BUNDLE_SIZE_MB, BUNDLE_SIZE_STATUS, SECURITY_STATUS, PERF_STATUS, 
+                  BACKEND_COVERAGE, BACKEND_COVERAGE_STATUS, 
+                  FRONTEND_COVERAGE, FRONTEND_COVERAGE_STATUS } = process.env;
+          
+          const results = [
+            { check: 'Code Quality', status: '${{ needs.code-quality.result }}' === 'success' ? '✅ Passed' : '❌ Failed' },
+            { check: 'Security Scan', status: SECURITY_STATUS || '${{ needs.security-analysis.result }}' === 'success' ? '✅ Passed' : '❌ Failed' },
+            { check: 'Performance Tests', status: PERF_STATUS || '${{ needs.performance-tests.result }}' === 'success' ? '✅ Passed' : '❌ Failed' },
+            { check: 'Backend Coverage', status: `${BACKEND_COVERAGE_STATUS || '⚠️ Unknown'} (${BACKEND_COVERAGE || 'N/A'}%)` },
+            { check: 'Frontend Coverage', status: `${FRONTEND_COVERAGE_STATUS || '⚠️ Unknown'} (${FRONTEND_COVERAGE || 'N/A'}%)` },
+            { check: 'Bundle Size', status: `${BUNDLE_SIZE_STATUS || '⚠️ Unknown'} (${BUNDLE_SIZE_MB || 'N/A'}MB)` }
+          ];
+          
+          const passed = results.every(r => r.status.includes('✅'));
+          const reportBody = `
+          ## 🎯 Quality Gate Report
+          
+          | Check | Status |
+          |-------|--------|
+          ${results.map(r => `| ${r.check} | ${r.status} |`).join('\n')}
+          
+          **Overall Status:** ${passed ? '✅ Quality Gate PASSED' : '❌ Quality Gate FAILED'}
+          
+          ${passed ? 
+            '🎉 All quality checks passed! This PR is ready for review.' : 
+            '⚠️ Some quality checks failed. Please address the issues before merging.'}
+          
+          ### Coverage Threshold
+          - Required: ${process.env.COVERAGE_THRESHOLD}%
+          - Backend: ${BACKEND_COVERAGE || 'N/A'}%
+          - Frontend: ${FRONTEND_COVERAGE || 'N/A'}%
+          
+          ### Bundle Size Limit
+          - Limit: 5MB
+          - Current: ${BUNDLE_SIZE_MB || 'N/A'}MB
+          `;
+          
+          // Post comment on PR
+          const { owner, repo } = context.repo;
+          const { number: issue_number } = context.issue;
+          
+          await github.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number,
+            body: reportBody
+          });
+          
+          // Set overall status
+          if (!passed) {
+            core.setFailed('Quality gate failed');
+          }

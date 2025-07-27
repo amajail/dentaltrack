@@ -1,0 +1,101 @@
+# Docker Compose configuration for CI/CD testing
+# Use this to test CI/CD workflows locally
+
+version: '3.8'
+
+services:
+  # SQL Server Database (for testing)
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=DentalTrack123!
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P DentalTrack123! -Q 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Backend API (for integration testing)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.ci
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Testing
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=DentalTrackTest;User Id=sa;Password=DentalTrack123!;TrustServerCertificate=true;
+      - JWT__Secret=DentalTrack_JWT_Secret_Key_For_Testing_2024!
+    ports:
+      - "5000:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Frontend (for E2E testing)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.ci
+    environment:
+      - VITE_API_BASE_URL=http://backend/api
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Security Scanner (Trivy)
+  trivy:
+    image: aquasec/trivy:latest
+    volumes:
+      - .:/workspace
+      - trivy_cache:/root/.cache/trivy
+    working_dir: /workspace
+    command: ["fs", ".", "--format", "json", "--output", "/workspace/trivy-results.json"]
+
+  # OWASP Dependency Check
+  owasp-dependency-check:
+    image: owasp/dependency-check:latest
+    volumes:
+      - .:/src
+      - owasp_data:/usr/share/dependency-check/data
+    command: >
+      --scan /src
+      --format JSON
+      --out /src/dependency-check-report.json
+      --project DentalTrack
+      --enableRetired
+      --enableExperimental
+
+  # Test Results Collector
+  test-collector:
+    image: alpine:latest
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: >
+      sh -c "
+        echo 'Collecting test results...' &&
+        mkdir -p test-results &&
+        find . -name '*.xml' -path '*/TestResults/*' -exec cp {} test-results/ \; &&
+        find . -name 'coverage*.xml' -exec cp {} test-results/ \; &&
+        find . -name '*.json' -path '*/coverage/*' -exec cp {} test-results/ \; &&
+        echo 'Test results collected in test-results/ directory'
+      "
+
+volumes:
+  sqlserver_data:
+  trivy_cache:
+  owasp_data:
