@@ -21,12 +21,12 @@ public class CreatePatientHandlerTests
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockPatientRepository = new Mock<IPatientRepository>();
-        
+
         var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
         _mapper = config.CreateMapper();
-        
+
         _mockUnitOfWork.Setup(x => x.Patients).Returns(_mockPatientRepository.Object);
-        
+
         _handler = new CreatePatientHandler(_mockUnitOfWork.Object, _mapper);
     }
 
@@ -73,13 +73,13 @@ public class CreatePatientHandlerTests
         result.Id.Should().NotBeEmpty();
 
         _mockPatientRepository.Verify(
-            x => x.EmailExistsAsync(createPatientDto.Email, null, It.IsAny<CancellationToken>()), 
+            x => x.EmailExistsAsync(createPatientDto.Email, null, It.IsAny<CancellationToken>()),
             Times.Once);
         _mockPatientRepository.Verify(
-            x => x.AddAsync(It.IsAny<Patient>(), It.IsAny<CancellationToken>()), 
+            x => x.AddAsync(It.IsAny<Patient>(), It.IsAny<CancellationToken>()),
             Times.Once);
         _mockUnitOfWork.Verify(
-            x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), 
+            x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -103,18 +103,18 @@ public class CreatePatientHandlerTests
 
         // Act & Assert
         var action = async () => await _handler.Handle(command, CancellationToken.None);
-        
+
         await action.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage($"Patient with email {createPatientDto.Email} already exists");
 
         _mockPatientRepository.Verify(
-            x => x.EmailExistsAsync(createPatientDto.Email, null, It.IsAny<CancellationToken>()), 
+            x => x.EmailExistsAsync(createPatientDto.Email, null, It.IsAny<CancellationToken>()),
             Times.Once);
         _mockPatientRepository.Verify(
-            x => x.AddAsync(It.IsAny<Patient>(), It.IsAny<CancellationToken>()), 
+            x => x.AddAsync(It.IsAny<Patient>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _mockUnitOfWork.Verify(
-            x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), 
+            x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -125,7 +125,7 @@ public class CreatePatientHandlerTests
         var createPatientDto = new CreatePatientDto
         {
             FirstName = "Jane",
-            LastName = "Smith", 
+            LastName = "Smith",
             Email = "jane.smith@example.com",
             DateOfBirth = new DateTime(1990, 3, 20)
         };

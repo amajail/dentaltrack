@@ -18,11 +18,11 @@ public class PhotoMetadataTests
 
         // Act
         var metadata = new PhotoMetadata(
-            width, 
-            height, 
-            cameraModel, 
-            cameraMake, 
-            dateTaken, 
+            width,
+            height,
+            cameraModel,
+            cameraMake,
+            dateTaken,
             location,
             0.125, // exposureTime
             2.8,   // fNumber

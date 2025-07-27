@@ -39,12 +39,12 @@ public static class DependencyInjection
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<DentalTrackDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<DataSeeder>>();
-        
+
         try
         {
             await context.Database.MigrateAsync();
             logger.LogInformation("Database migrations applied successfully");
-            
+
             var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
             await seeder.SeedAsync();
         }

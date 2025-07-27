@@ -21,12 +21,12 @@ public class GetAllPatientsHandlerTests
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockPatientRepository = new Mock<IPatientRepository>();
-        
+
         var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
         _mapper = config.CreateMapper();
-        
+
         _mockUnitOfWork.Setup(x => x.Patients).Returns(_mockPatientRepository.Object);
-        
+
         _handler = new GetAllPatientsHandler(_mockUnitOfWork.Object, _mapper);
     }
 
@@ -71,7 +71,7 @@ public class GetAllPatientsHandlerTests
         resultList[2].FullName.Should().Be("Bob Johnson");
 
         _mockPatientRepository.Verify(
-            x => x.GetAllAsync(It.IsAny<CancellationToken>()), 
+            x => x.GetAllAsync(It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -94,7 +94,7 @@ public class GetAllPatientsHandlerTests
         result.Should().BeEmpty();
 
         _mockPatientRepository.Verify(
-            x => x.GetAllAsync(It.IsAny<CancellationToken>()), 
+            x => x.GetAllAsync(It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -103,9 +103,9 @@ public class GetAllPatientsHandlerTests
     {
         // Arrange
         var patient = new Patient(
-            "Test", 
-            "User", 
-            "test@example.com", 
+            "Test",
+            "User",
+            "test@example.com",
             new DateTime(1980, 6, 15),
             "555-1234",
             "123 Test St",
@@ -164,7 +164,7 @@ public class GetAllPatientsHandlerTests
 
         // Assert
         result.Should().HaveCount(2);
-        
+
         var resultList = result.ToList();
         resultList.Should().Contain(p => p.IsActive == true);
         resultList.Should().Contain(p => p.IsActive == false);

@@ -39,13 +39,13 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() 
-    { 
-        Title = "DentalTrack API", 
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "DentalTrack API",
         Version = "v1",
         Description = "A dental practice management system API built with Clean Architecture"
     });
-    
+
     // Include XML comments
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);

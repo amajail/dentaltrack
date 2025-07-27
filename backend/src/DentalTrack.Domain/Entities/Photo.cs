@@ -16,7 +16,7 @@ public class Photo : BaseEntity
     public int? ToothNumber { get; private set; }
     public PhotoQuality Quality { get; private set; }
     public bool IsProcessed { get; private set; }
-    
+
     public ICollection<Analysis> Analyses { get; private set; } = new List<Analysis>();
 
     private Photo() { }

@@ -42,7 +42,7 @@ public class TreatmentsController : ControllerBase
         try
         {
             var treatment = await _mediator.Send(new CreateTreatmentCommand(createTreatmentDto));
-            return CreatedAtAction(nameof(GetTreatmentsByPatient), 
+            return CreatedAtAction(nameof(GetTreatmentsByPatient),
                 new { patientId = treatment.PatientId }, treatment);
         }
         catch (InvalidOperationException ex)

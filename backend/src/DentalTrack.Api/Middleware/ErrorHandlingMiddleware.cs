@@ -30,7 +30,7 @@ public class ErrorHandlingMiddleware
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
-        
+
         var response = new ErrorResponse();
 
         switch (exception)

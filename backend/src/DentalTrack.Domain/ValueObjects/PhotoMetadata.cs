@@ -15,7 +15,7 @@ public record PhotoMetadata
     public double? FocalLength { get; }
 
     public PhotoMetadata(
-        int width, 
+        int width,
         int height,
         string? cameraModel = null,
         string? cameraMake = null,
@@ -46,11 +46,11 @@ public record PhotoMetadata
     }
 
     public double GetAspectRatio() => (double)Width / Height;
-    
+
     public long GetTotalPixels() => (long)Width * Height;
-    
+
     public bool IsHighResolution() => GetTotalPixels() >= 2_000_000; // 2MP+
-    
+
     public string GetResolutionDescription()
     {
         var megapixels = GetTotalPixels() / 1_000_000.0;

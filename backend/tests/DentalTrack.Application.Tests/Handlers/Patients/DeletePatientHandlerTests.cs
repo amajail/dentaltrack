@@ -30,13 +30,13 @@ public class DeletePatientHandlerTests
 
         _unitOfWorkMock.Setup(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(patient);
-        
+
         _unitOfWorkMock.Setup(x => x.Treatments.GetByPatientIdAsync(patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(treatments);
 
         _unitOfWorkMock.Setup(x => x.Patients.UpdateAsync(patient, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        
+
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
@@ -80,7 +80,7 @@ public class DeletePatientHandlerTests
         var command = new DeletePatientCommand(patientId);
 
         var patient = new Patient("John", "Doe", "john.doe@email.com", DateTime.Now.AddYears(-30), "123-456-7890");
-        
+
         var activeTreatment = new Treatment(
             patientId,
             TreatmentType.Cleaning,
@@ -93,14 +93,14 @@ public class DeletePatientHandlerTests
 
         _unitOfWorkMock.Setup(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(patient);
-        
+
         _unitOfWorkMock.Setup(x => x.Treatments.GetByPatientIdAsync(patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(treatments);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _handler.Handle(command, CancellationToken.None));
-        
+
         Assert.Contains("Cannot delete patient with active treatments", exception.Message);
 
         _unitOfWorkMock.Verify(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()), Times.Once);
@@ -117,7 +117,7 @@ public class DeletePatientHandlerTests
         var command = new DeletePatientCommand(patientId);
 
         var patient = new Patient("John", "Doe", "john.doe@email.com", DateTime.Now.AddYears(-30), "123-456-7890");
-        
+
         var completedTreatment = new Treatment(
             patientId,
             TreatmentType.Cleaning,
@@ -131,13 +131,13 @@ public class DeletePatientHandlerTests
 
         _unitOfWorkMock.Setup(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(patient);
-        
+
         _unitOfWorkMock.Setup(x => x.Treatments.GetByPatientIdAsync(patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(treatments);
 
         _unitOfWorkMock.Setup(x => x.Patients.UpdateAsync(patient, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        
+
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 

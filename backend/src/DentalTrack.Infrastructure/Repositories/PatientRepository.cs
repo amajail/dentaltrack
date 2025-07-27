@@ -39,7 +39,7 @@ public class PatientRepository : Repository<Patient>, IPatientRepository
     public async Task<bool> EmailExistsAsync(string email, Guid? excludePatientId = null, CancellationToken cancellationToken = default)
     {
         var query = _dbSet.Where(p => p.Email == email);
-        
+
         if (excludePatientId.HasValue)
         {
             query = query.Where(p => p.Id != excludePatientId.Value);

@@ -27,7 +27,7 @@ public class CreateTreatmentHandler : IRequestHandler<CreateTreatmentCommand, Tr
         }
 
         var treatment = _mapper.Map<Treatment>(request.TreatmentDto);
-        
+
         await _unitOfWork.Treatments.AddAsync(treatment, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

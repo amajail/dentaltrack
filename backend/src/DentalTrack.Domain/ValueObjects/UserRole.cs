@@ -14,7 +14,7 @@ public static class UserRoleExtensions
         return role switch
         {
             UserRole.Doctor => "Doctor",
-            UserRole.Assistant => "Assistant", 
+            UserRole.Assistant => "Assistant",
             UserRole.Admin => "Admin",
             _ => "Unknown"
         };

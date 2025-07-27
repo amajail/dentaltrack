@@ -47,7 +47,7 @@ public class PhotoTests
     [Fact]
     public void Constructor_WithEmptyTreatmentId_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => 
+        Assert.Throws<ArgumentException>(() =>
             new Photo(Guid.Empty, _fileName, _filePath, _contentType, _fileSize, _photoType, _metadata));
     }
 
@@ -57,7 +57,7 @@ public class PhotoTests
     [InlineData(null)]
     public void Constructor_WithInvalidFileName_ThrowsArgumentException(string? invalidFileName)
     {
-        Assert.Throws<ArgumentException>(() => 
+        Assert.Throws<ArgumentException>(() =>
             new Photo(_treatmentId, invalidFileName!, _filePath, _contentType, _fileSize, _photoType, _metadata));
     }
 
@@ -67,7 +67,7 @@ public class PhotoTests
     [InlineData(null)]
     public void Constructor_WithInvalidFilePath_ThrowsArgumentException(string? invalidFilePath)
     {
-        Assert.Throws<ArgumentException>(() => 
+        Assert.Throws<ArgumentException>(() =>
             new Photo(_treatmentId, _fileName, invalidFilePath!, _contentType, _fileSize, _photoType, _metadata));
     }
 
@@ -77,7 +77,7 @@ public class PhotoTests
     [InlineData(null)]
     public void Constructor_WithInvalidContentType_ThrowsArgumentException(string? invalidContentType)
     {
-        Assert.Throws<ArgumentException>(() => 
+        Assert.Throws<ArgumentException>(() =>
             new Photo(_treatmentId, _fileName, _filePath, invalidContentType!, _fileSize, _photoType, _metadata));
     }
 
@@ -87,7 +87,7 @@ public class PhotoTests
     [InlineData(-1000)]
     public void Constructor_WithInvalidFileSize_ThrowsArgumentException(long invalidFileSize)
     {
-        Assert.Throws<ArgumentException>(() => 
+        Assert.Throws<ArgumentException>(() =>
             new Photo(_treatmentId, _fileName, _filePath, _contentType, invalidFileSize, _photoType, _metadata));
     }
 

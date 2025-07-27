@@ -213,7 +213,7 @@ public class DentalTrackDbContext : DbContext
         foreach (var entityEntry in entries)
         {
             var entity = (BaseEntity)entityEntry.Entity;
-            
+
             if (entityEntry.State == EntityState.Added)
             {
                 entity.SetCreatedAt();
