@@ -7,5 +7,22 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'json-summary', 'html'],
+      exclude: [
+        'coverage/**',
+        'dist/**',
+        '**/node_modules/**',
+        '**/src/test/**',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/vite-env.d.ts'
+      ],
+      statements: 80,
+      branches: 80,
+      functions: 80,
+      lines: 80
+    }
   },
 })
