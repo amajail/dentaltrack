@@ -29,7 +29,7 @@ public class GetAllPatientsHandler : IRequestHandler<GetAllPatientsQuery, PagedR
             cancellationToken: cancellationToken);
 
         var patientDtos = _mapper.Map<IList<PatientDto>>(patients.Items);
-        
+
         return new PagedResult<PatientDto>(patientDtos, patients.TotalCount, request.Page, request.PageSize);
     }
 }

@@ -74,7 +74,7 @@ public class TreatmentsController : ControllerBase
         // In a real implementation, you'd create a GetTreatmentByIdQuery
         var treatments = await _mediator.Send(new GetAllTreatmentsQuery { Page = 1, PageSize = 1000 });
         var treatment = treatments.Items.FirstOrDefault(t => t.Id == id);
-        
+
         if (treatment == null)
         {
             return NotFound($"Treatment with ID {id} not found");
@@ -114,8 +114,8 @@ public class TreatmentsController : ControllerBase
         try
         {
             var treatment = await _mediator.Send(new CreateTreatmentCommand(createTreatmentDto));
-            
-            return CreatedAtAction(nameof(GetTreatment), 
+
+            return CreatedAtAction(nameof(GetTreatment),
                 new { id = treatment.Id }, treatment);
         }
         catch (InvalidOperationException ex)

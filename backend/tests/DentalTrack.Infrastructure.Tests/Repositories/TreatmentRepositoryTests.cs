@@ -164,7 +164,7 @@ public class TreatmentRepositoryTests : TestBase
         // Arrange
         var treatment1 = new Treatment(_testPatient.Id, TreatmentType.Cleaning, "Treatment 1", "Description 1", 150.00m, DateTime.UtcNow);
         var treatment2 = new Treatment(_testPatient.Id, TreatmentType.Filling, "Treatment 2", "Description 2", 300.00m, DateTime.UtcNow.AddDays(1));
-        
+
         // Start treatment2 to change its status
         treatment2.Start();
 

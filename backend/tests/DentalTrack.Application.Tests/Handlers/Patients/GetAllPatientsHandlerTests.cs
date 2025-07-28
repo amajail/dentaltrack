@@ -46,11 +46,11 @@ public class GetAllPatientsHandlerTests
 
         _mockPatientRepository
             .Setup(x => x.GetPagedAsync(
-                It.IsAny<int>(), 
-                It.IsAny<int>(), 
-                It.IsAny<string>(), 
-                It.IsAny<string>(), 
-                It.IsAny<bool>(), 
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((patients, 3));
 
@@ -82,12 +82,12 @@ public class GetAllPatientsHandlerTests
 
         _mockPatientRepository.Verify(
             x => x.GetPagedAsync(
-                query.Page, 
-                query.PageSize, 
-                query.Search, 
-                query.SortBy, 
-                query.SortDescending, 
-                It.IsAny<CancellationToken>()), 
+                query.Page,
+                query.PageSize,
+                query.Search,
+                query.SortBy,
+                query.SortDescending,
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -100,11 +100,11 @@ public class GetAllPatientsHandlerTests
 
         _mockPatientRepository
             .Setup(x => x.GetPagedAsync(
-                It.IsAny<int>(), 
-                It.IsAny<int>(), 
-                It.IsAny<string>(), 
-                It.IsAny<string>(), 
-                It.IsAny<bool>(), 
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((patients, 0));
 
@@ -120,12 +120,12 @@ public class GetAllPatientsHandlerTests
 
         _mockPatientRepository.Verify(
             x => x.GetPagedAsync(
-                query.Page, 
-                query.PageSize, 
-                query.Search, 
-                query.SortBy, 
-                query.SortDescending, 
-                It.IsAny<CancellationToken>()), 
+                query.Page,
+                query.PageSize,
+                query.Search,
+                query.SortBy,
+                query.SortDescending,
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -150,11 +150,11 @@ public class GetAllPatientsHandlerTests
 
         _mockPatientRepository
             .Setup(x => x.GetPagedAsync(
-                It.IsAny<int>(), 
-                It.IsAny<int>(), 
-                It.IsAny<string>(), 
-                It.IsAny<string>(), 
-                It.IsAny<bool>(), 
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((patients, 1));
 
@@ -186,9 +186,9 @@ public class GetAllPatientsHandlerTests
     {
         // Arrange
         var patients = new List<Patient>();
-        var query = new GetAllPatientsQuery 
-        { 
-            Page = 2, 
+        var query = new GetAllPatientsQuery
+        {
+            Page = 2,
             PageSize = 5,
             Search = "John",
             SortBy = "FirstName",
@@ -197,11 +197,11 @@ public class GetAllPatientsHandlerTests
 
         _mockPatientRepository
             .Setup(x => x.GetPagedAsync(
-                It.IsAny<int>(), 
-                It.IsAny<int>(), 
-                It.IsAny<string>(), 
-                It.IsAny<string>(), 
-                It.IsAny<bool>(), 
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((patients, 0));
 
@@ -216,7 +216,7 @@ public class GetAllPatientsHandlerTests
                 "John",     // search
                 "FirstName", // sortBy
                 true,       // sortDescending
-                It.IsAny<CancellationToken>()), 
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 }

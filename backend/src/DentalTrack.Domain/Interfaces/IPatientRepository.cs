@@ -10,10 +10,10 @@ public interface IPatientRepository : IRepository<Patient>
     Task<IEnumerable<Patient>> GetPatientsWithActiveTreatmentsAsync(CancellationToken cancellationToken = default);
     Task<bool> EmailExistsAsync(string email, Guid? excludePatientId = null, CancellationToken cancellationToken = default);
     Task<(IList<Patient> Items, int TotalCount)> GetPagedAsync(
-        int page, 
-        int pageSize, 
-        string? search = null, 
-        string? sortBy = null, 
-        bool sortDescending = false, 
+        int page,
+        int pageSize,
+        string? search = null,
+        string? sortBy = null,
+        bool sortDescending = false,
         CancellationToken cancellationToken = default);
 }

@@ -37,7 +37,7 @@ public class UnitOfWorkTests : TestBase
         await _unitOfWork.Patients.AddAsync(patient);
         await _unitOfWork.Users.AddAsync(user);
         await _unitOfWork.Treatments.AddAsync(treatment);
-        
+
         var result = await _unitOfWork.SaveChangesAsync();
 
         // Assert
@@ -67,7 +67,7 @@ public class UnitOfWorkTests : TestBase
     {
         // Act & Assert - Should not throw
         await _unitOfWork.BeginTransactionAsync();
-        
+
         // Cleanup
         await _unitOfWork.RollbackTransactionAsync();
     }
@@ -125,7 +125,7 @@ public class UnitOfWorkTests : TestBase
         patient2!.UpdatePersonalInfo("John2", "Doe2", "john2@example.com", patient2.DateOfBirth);
 
         await _unitOfWork.SaveChangesAsync();
-        
+
         // The second save should work since we're using in-memory database
         await unitOfWork2.SaveChangesAsync();
 

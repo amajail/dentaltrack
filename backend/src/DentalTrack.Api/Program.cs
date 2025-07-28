@@ -48,7 +48,7 @@ builder.Services.AddSwaggerGen(c =>
         Contact = new() { Name = "DentalTrack Team", Email = "support@dentaltrack.com" },
         License = new() { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
     });
-    
+
     // Include XML comments for better documentation
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -60,7 +60,7 @@ builder.Services.AddSwaggerGen(c =>
     // Add response examples and better schemas
     c.EnableAnnotations();
     c.UseInlineDefinitionsForEnums();
-    
+
     // Group endpoints by tags
     c.TagActionsBy(api => new[] { api.GroupName ?? api.ActionDescriptor.RouteValues["controller"] });
     c.DocInclusionPredicate((name, api) => true);
