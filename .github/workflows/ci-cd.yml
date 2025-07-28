@@ -63,11 +63,12 @@ jobs:
       run: |
         COVERAGE=$(grep -o 'Line coverage: [0-9.]*%' ./coverage-report/Summary.txt | grep -o '[0-9.]*')
         echo "Coverage: $COVERAGE%"
-        if (( $(echo "$COVERAGE < ${{ env.BACKEND_COVERAGE_THRESHOLD }}" | bc -l) )); then
+        # Use awk instead of bc for floating point comparison
+        if awk -v cov="$COVERAGE" -v thresh="${{ env.BACKEND_COVERAGE_THRESHOLD }}" 'BEGIN { exit (cov < thresh) }'; then
+          echo "✅ Coverage $COVERAGE% meets threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
+        else
           echo "❌ Coverage $COVERAGE% is below threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
           exit 1
-        else
-          echo "✅ Coverage $COVERAGE% meets threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
         fi
     
     - name: Upload coverage to Codecov
@@ -143,33 +144,13 @@ jobs:
         flags: frontend
         fail_ci_if_error: false
 
-  # Docker Build (for future deployment)
-  docker-build:
-    needs: [backend-ci, frontend-ci, security-scan]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Login to DockerHub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-      if: ${{ secrets.DOCKERHUB_USERNAME }}
-    
-    - name: Build and push Docker images
-      run: |
-        if [ ! -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
-          docker buildx build --platform linux/amd64,linux/arm64 -t ${{ secrets.DOCKERHUB_USERNAME }}/dentaltrack-api:latest ./backend --push
-          docker buildx build --platform linux/amd64,linux/arm64 -t ${{ secrets.DOCKERHUB_USERNAME }}/dentaltrack-web:latest ./frontend --push
-        else
-          echo "Docker Hub credentials not configured, skipping Docker build"
-        fi
+  # Docker Build (DISABLED - Tech Debt)
+  # TODO: Re-enable when Docker Hub secrets are configured
+  # See GitHub issue for Docker implementation tech debt
+  # docker-build:
+  #   needs: [backend-ci, frontend-ci, security-scan]
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
 
   # Security Scan
   security-scan:
