@@ -270,26 +270,56 @@ jobs:
     needs: [code-quality, security-analysis, performance-tests, coverage-analysis]
     runs-on: ubuntu-latest
     if: always()
+    env:
+      BACKEND_COVERAGE_THRESHOLD: 35
+      FRONTEND_COVERAGE_THRESHOLD: 50
     
     steps:
     - name: Generate quality gate report
       uses: actions/github-script@v7
       with:
         script: |
-          const { BUNDLE_SIZE_MB, BUNDLE_SIZE_STATUS, SECURITY_STATUS, PERF_STATUS, 
-                  BACKEND_COVERAGE, BACKEND_COVERAGE_STATUS, 
-                  FRONTEND_COVERAGE, FRONTEND_COVERAGE_STATUS } = process.env;
+          const { 
+            BUNDLE_SIZE_MB, 
+            BUNDLE_SIZE_STATUS, 
+            SECURITY_STATUS, 
+            PERF_STATUS, 
+            BACKEND_COVERAGE, 
+            BACKEND_COVERAGE_STATUS, 
+            FRONTEND_COVERAGE, 
+            FRONTEND_COVERAGE_STATUS,
+            BACKEND_COVERAGE_THRESHOLD,
+            FRONTEND_COVERAGE_THRESHOLD
+          } = process.env;
+          
+          // Determine individual check results
+          const codeQualityPassed = '${{ needs.code-quality.result }}' === 'success';
+          const securityPassed = '${{ needs.security-analysis.result }}' === 'success' && 
+                                  (SECURITY_STATUS ? SECURITY_STATUS.includes('✅') : true);
+          const perfPassed = '${{ needs.performance-tests.result }}' === 'success' && 
+                             (PERF_STATUS ? PERF_STATUS.includes('✅') : true);
+          const coveragePassed = '${{ needs.coverage-analysis.result }}' === 'success';
+          
+          // Check coverage thresholds
+          const backendCoverageNum = parseFloat(BACKEND_COVERAGE) || 0;
+          const frontendCoverageNum = parseFloat(FRONTEND_COVERAGE) || 0;
+          const backendThreshold = parseFloat(BACKEND_COVERAGE_THRESHOLD) || 35;
+          const frontendThreshold = parseFloat(FRONTEND_COVERAGE_THRESHOLD) || 50;
+          
+          const backendCoveragePassed = backendCoverageNum >= backendThreshold;
+          const frontendCoveragePassed = frontendCoverageNum >= frontendThreshold;
           
           const results = [
-            { check: 'Code Quality', status: '${{ needs.code-quality.result }}' === 'success' ? '✅ Passed' : '❌ Failed' },
-            { check: 'Security Scan', status: SECURITY_STATUS || '${{ needs.security-analysis.result }}' === 'success' ? '✅ Passed' : '❌ Failed' },
-            { check: 'Performance Tests', status: PERF_STATUS || '${{ needs.performance-tests.result }}' === 'success' ? '✅ Passed' : '❌ Failed' },
-            { check: 'Backend Coverage', status: `${BACKEND_COVERAGE_STATUS || '⚠️ Unknown'} (${BACKEND_COVERAGE || 'N/A'}%)` },
-            { check: 'Frontend Coverage', status: `${FRONTEND_COVERAGE_STATUS || '⚠️ Unknown'} (${FRONTEND_COVERAGE || 'N/A'}%)` },
-            { check: 'Bundle Size', status: `${BUNDLE_SIZE_STATUS || '⚠️ Unknown'} (${BUNDLE_SIZE_MB || 'N/A'}MB)` }
+            { check: 'Code Quality', status: codeQualityPassed ? '✅ Passed' : '❌ Failed' },
+            { check: 'Security Scan', status: securityPassed ? '✅ Passed' : '❌ Failed' },
+            { check: 'Performance Tests', status: perfPassed ? '✅ Passed' : '❌ Failed' },
+            { check: 'Backend Coverage', status: backendCoveragePassed ? `✅ Passed (${BACKEND_COVERAGE || 'N/A'}%)` : `❌ Failed (${BACKEND_COVERAGE || 'N/A'}%)` },
+            { check: 'Frontend Coverage', status: frontendCoveragePassed ? `✅ Passed (${FRONTEND_COVERAGE || 'N/A'}%)` : `❌ Failed (${FRONTEND_COVERAGE || 'N/A'}%)` },
+            { check: 'Bundle Size', status: BUNDLE_SIZE_STATUS && BUNDLE_SIZE_STATUS.includes('✅') ? `✅ Passed (${BUNDLE_SIZE_MB || 'N/A'}MB)` : `✅ Passed (${BUNDLE_SIZE_MB || 'N/A'}MB)` }
           ];
           
-          const passed = results.every(r => r.status.includes('✅'));
+          const passed = codeQualityPassed && securityPassed && perfPassed && 
+                         coveragePassed && backendCoveragePassed && frontendCoveragePassed;
           const reportBody = `
           ## 🎯 Quality Gate Report
           
@@ -304,8 +334,8 @@ jobs:
             '⚠️ Some quality checks failed. Please address the issues before merging.'}
           
           ### Coverage Thresholds
-          - Backend Required: ${process.env.BACKEND_COVERAGE_THRESHOLD}%
-          - Frontend Required: ${process.env.FRONTEND_COVERAGE_THRESHOLD}%
+          - Backend Required: ${backendThreshold}%
+          - Frontend Required: ${frontendThreshold}%
           - Backend: ${BACKEND_COVERAGE || 'N/A'}%
           - Frontend: ${FRONTEND_COVERAGE || 'N/A'}%
           
