@@ -111,22 +111,28 @@ jobs:
     
     - name: Check for critical vulnerabilities
       run: |
-        # Count critical and high vulnerabilities
-        CRITICAL_COUNT=$(jq '.runs[0].results | map(select(.level == "error")) | length' trivy-results.sarif || echo "0")
-        HIGH_COUNT=$(jq '.runs[0].results | map(select(.level == "warning")) | length' trivy-results.sarif || echo "0")
-        
-        echo "Critical vulnerabilities: $CRITICAL_COUNT"
-        echo "High vulnerabilities: $HIGH_COUNT"
-        
-        if [ "$CRITICAL_COUNT" -gt 0 ]; then
-          echo "::error::Found $CRITICAL_COUNT critical vulnerabilities"
-          echo "SECURITY_STATUS=❌ Critical vulnerabilities found" >> $GITHUB_ENV
-          exit 1
-        elif [ "$HIGH_COUNT" -gt 5 ]; then
-          echo "::warning::Found $HIGH_COUNT high vulnerabilities (threshold: 5)"
-          echo "SECURITY_STATUS=⚠️ High vulnerabilities need review" >> $GITHUB_ENV
+        # Check if SARIF file exists and is valid
+        if [ -f trivy-results.sarif ]; then
+          # Count critical and high vulnerabilities
+          CRITICAL_COUNT=$(jq '.runs[0].results | map(select(.level == "error")) | length' trivy-results.sarif 2>/dev/null || echo "0")
+          HIGH_COUNT=$(jq '.runs[0].results | map(select(.level == "warning")) | length' trivy-results.sarif 2>/dev/null || echo "0")
+          
+          echo "Critical vulnerabilities: $CRITICAL_COUNT"
+          echo "High vulnerabilities: $HIGH_COUNT"
+          
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "::error::Found $CRITICAL_COUNT critical vulnerabilities"
+            echo "SECURITY_STATUS=❌ Critical vulnerabilities found" >> $GITHUB_ENV
+            exit 1
+          elif [ "$HIGH_COUNT" -gt 5 ]; then
+            echo "::warning::Found $HIGH_COUNT high vulnerabilities (threshold: 5)"
+            echo "SECURITY_STATUS=⚠️ High vulnerabilities need review" >> $GITHUB_ENV
+          else
+            echo "SECURITY_STATUS=✅ No critical issues" >> $GITHUB_ENV
+          fi
         else
-          echo "SECURITY_STATUS=✅ No critical issues" >> $GITHUB_ENV
+          echo "::warning::Trivy SARIF results not found"
+          echo "SECURITY_STATUS=⚠️ Scan results missing" >> $GITHUB_ENV
         fi
 
   performance-tests:
@@ -222,13 +228,16 @@ jobs:
           echo "Backend coverage: $COVERAGE%"
           echo "BACKEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
           
-          if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
-            echo "BACKEND_COVERAGE_STATUS=❌ Below threshold" >> $GITHUB_ENV
-          else
+          # Use awk instead of bc for floating point comparison
+          if awk -v cov="$COVERAGE" -v thresh="${{ env.COVERAGE_THRESHOLD }}" 'BEGIN { exit (cov < thresh) }'; then
             echo "BACKEND_COVERAGE_STATUS=✅ Meets threshold" >> $GITHUB_ENV
+          else
+            echo "BACKEND_COVERAGE_STATUS=❌ Below threshold" >> $GITHUB_ENV
+            echo "::warning::Backend coverage $COVERAGE% is below threshold ${{ env.COVERAGE_THRESHOLD }}%"
           fi
         else
           echo "BACKEND_COVERAGE_STATUS=⚠️ Report not found" >> $GITHUB_ENV
+          echo "::warning::Backend coverage report not found"
         fi
     
     - name: Generate frontend coverage
@@ -247,11 +256,13 @@ jobs:
           
           if [ $COVERAGE -lt ${{ env.COVERAGE_THRESHOLD }} ]; then
             echo "FRONTEND_COVERAGE_STATUS=❌ Below threshold" >> $GITHUB_ENV
+            echo "::warning::Frontend coverage $COVERAGE% is below threshold ${{ env.COVERAGE_THRESHOLD }}%"
           else
             echo "FRONTEND_COVERAGE_STATUS=✅ Meets threshold" >> $GITHUB_ENV
           fi
         else
           echo "FRONTEND_COVERAGE_STATUS=⚠️ Report not found" >> $GITHUB_ENV
+          echo "::warning::Frontend coverage report not found"
         fi
 
   quality-gate-summary:
