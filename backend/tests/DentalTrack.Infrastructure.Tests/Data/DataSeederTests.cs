@@ -79,7 +79,7 @@ public class DataSeederTests : TestBase
 
         // Assert
         var users = await Context.Users.ToListAsync();
-        
+
         users.Should().Contain(u => u.Role == UserRole.Admin);
         users.Should().Contain(u => u.Role == UserRole.Doctor);
         users.Should().Contain(u => u.Role == UserRole.Assistant);
@@ -95,7 +95,7 @@ public class DataSeederTests : TestBase
 
         // Assert
         var patients = await Context.Patients.ToListAsync();
-        
+
         patients.Should().NotBeEmpty();
         patients.Should().AllSatisfy(p =>
         {
@@ -123,7 +123,7 @@ public class DataSeederTests : TestBase
         var treatments = await Context.Treatments.ToListAsync();
 
         patients.Should().NotBeEmpty();
-        
+
         // If treatments exist, they should be linked to existing patients
         if (treatments.Any())
         {
@@ -147,15 +147,15 @@ public class DataSeederTests : TestBase
 
         // Assert
         var treatments = await Context.Treatments.ToListAsync();
-        
+
         // If treatments exist, check their types
         if (treatments.Any())
         {
             var treatmentTypes = treatments.Select(t => t.Type).Distinct().ToList();
             treatmentTypes.Should().NotBeEmpty();
-            
+
             // Should include at least one valid treatment type
-            treatmentTypes.Should().AllSatisfy(type => 
+            treatmentTypes.Should().AllSatisfy(type =>
                 Enum.IsDefined(typeof(TreatmentType), type).Should().BeTrue());
         }
     }
@@ -170,15 +170,15 @@ public class DataSeederTests : TestBase
 
         // Assert
         var treatments = await Context.Treatments.ToListAsync();
-        
+
         // If treatments exist, check their statuses
         if (treatments.Any())
         {
             var statuses = treatments.Select(t => t.Status).Distinct().ToList();
             statuses.Should().NotBeEmpty();
-            
+
             // Should have valid statuses
-            statuses.Should().AllSatisfy(status => 
+            statuses.Should().AllSatisfy(status =>
                 Enum.IsDefined(typeof(TreatmentStatus), status).Should().BeTrue());
         }
     }

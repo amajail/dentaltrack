@@ -26,7 +26,7 @@ public class CreatePatientHandler : IRequestHandler<CreatePatientCommand, Patien
         }
 
         var patient = _mapper.Map<Patient>(request.PatientDto);
-        
+
         await _unitOfWork.Patients.AddAsync(patient, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

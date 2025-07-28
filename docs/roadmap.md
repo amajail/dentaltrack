@@ -77,14 +77,14 @@ React Web App ↔ .NET 8 Web API ↔ Azure SQL + Blob Storage
 - **AI Accuracy**: >85% precisión análisis color
 
 ### 🗓️ Sprint Breakdown
-1. **Sprint 0** (2w): Setup inicial y configuración
-2. **Sprint 1** (2w): API base y autenticación
-3. **Sprint 2** (2w): Frontend base y pacientes
-4. **Sprint 3** (3w): Gestión de fotos
-5. **Sprint 4** (3w): IA básica y análisis
-6. **Sprint 5** (2w): Reportes y dashboard
-7. **Sprint 6** (2w): Testing y optimización
-8. **Sprint 7** (2w): Deploy y documentación
+1. **Sprint 0** (2w): Setup inicial y configuración 🔄 **43% completed**
+2. **Sprint 1** (2w): API base y autenticación 📋 Ready
+3. **Sprint 2** (2w): Frontend base y pacientes 📋 Ready
+4. **Sprint 3** (3w): Gestión de fotos 📋 Ready
+5. **Sprint 4** (3w): IA básica y análisis 📋 Ready
+6. **Sprint 5** (2w): Reportes y dashboard 📋 Ready
+7. **Sprint 6** (2w): Testing y optimización 📋 Ready
+8. **Sprint 7** (2w): Deploy y documentación 📋 Ready
 
 ---
 
@@ -344,7 +344,30 @@ Crear ecosistema completo con integraciones a sistemas existentes.
 
 ---
 
-📅 **Última actualización**: 2025-01-20  
-🎯 **Fase actual**: MVP Planning Complete  
-🚀 **Próximo milestone**: Sprint 0 - Setup Inicial  
+📅 **Última actualización**: 2025-01-27  
+🎯 **Fase actual**: MVP Development - Sprint 0 (43% completed)  
+✅ **Completado**: Monorepo Setup, CI/CD Pipeline Implementation  
+🚀 **Próximo milestone**: Complete Sprint 0 - CI/CD Activation  
 ⏰ **Revisión roadmap**: Mensual
+
+## 📈 Current Progress (January 27, 2025)
+
+### ✅ Completed Milestones
+- **US-001**: Configurar monorepo con estructura Clean Architecture ✅
+- **US-003**: Configurar GitHub Actions CI/CD pipeline ✅
+  - 4 Complete GitHub Actions workflows
+  - Quality gates with 80% coverage enforcement
+  - Security scanning (Trivy + OWASP)
+  - Automatic staging deployment
+  - Manual production deployment with approval
+
+### 🔄 In Progress
+- **Sprint 0**: 43% completed (10/23 story points)
+- **US-002**: GitHub repository and Projects configuration
+- **US-004**: Azure infrastructure setup
+- **US-004b**: CI/CD pipeline activation and validation
+
+### 🎯 Next Priorities
+1. **Complete US-004b**: Activate CI/CD with Azure credentials
+2. **Finish Sprint 0**: Complete remaining setup tasks
+3. **Begin Sprint 1**: Start API development (US-005)

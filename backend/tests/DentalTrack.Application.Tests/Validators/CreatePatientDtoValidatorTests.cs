@@ -190,7 +190,7 @@ public class CreatePatientDtoValidatorTests
     {
         // Arrange & Act & Assert
         var validPhones = new[] { "5551234567", "+15551234567", "1234567890" };
-        
+
         foreach (var phone in validPhones)
         {
             var dto = new CreatePatientDto

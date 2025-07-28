@@ -23,12 +23,12 @@ public class GetAllTreatmentsHandlerTests
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockTreatmentRepository = new Mock<ITreatmentRepository>();
-        
+
         var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
         _mapper = config.CreateMapper();
-        
+
         _mockUnitOfWork.Setup(x => x.Treatments).Returns(_mockTreatmentRepository.Object);
-        
+
         _handler = new GetAllTreatmentsHandler(_mockUnitOfWork.Object, _mapper);
     }
 
@@ -51,12 +51,12 @@ public class GetAllTreatmentsHandlerTests
 
         _mockTreatmentRepository
             .Setup(x => x.GetPagedAsync(
-                It.IsAny<int>(), 
-                It.IsAny<int>(), 
-                It.IsAny<Guid?>(), 
-                It.IsAny<string>(), 
-                It.IsAny<string>(), 
-                It.IsAny<bool>(), 
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((treatments, 2));
 
@@ -86,12 +86,12 @@ public class GetAllTreatmentsHandlerTests
 
         _mockTreatmentRepository
             .Setup(x => x.GetPagedAsync(
-                It.IsAny<int>(), 
-                It.IsAny<int>(), 
-                It.IsAny<Guid?>(), 
-                It.IsAny<string>(), 
-                It.IsAny<string>(), 
-                It.IsAny<bool>(), 
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((treatments, 0));
 
@@ -112,9 +112,9 @@ public class GetAllTreatmentsHandlerTests
         // Arrange
         var patientId = Guid.NewGuid();
         var treatments = new List<Treatment>();
-        var query = new GetAllTreatmentsQuery 
-        { 
-            Page = 2, 
+        var query = new GetAllTreatmentsQuery
+        {
+            Page = 2,
             PageSize = 5,
             PatientId = patientId,
             Status = "InProgress",
@@ -124,12 +124,12 @@ public class GetAllTreatmentsHandlerTests
 
         _mockTreatmentRepository
             .Setup(x => x.GetPagedAsync(
-                It.IsAny<int>(), 
-                It.IsAny<int>(), 
-                It.IsAny<Guid?>(), 
-                It.IsAny<string>(), 
-                It.IsAny<string>(), 
-                It.IsAny<bool>(), 
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((treatments, 0));
 
@@ -145,7 +145,7 @@ public class GetAllTreatmentsHandlerTests
                 "InProgress",   // status
                 "StartDate",    // sortBy
                 false,          // sortDescending
-                It.IsAny<CancellationToken>()), 
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 }

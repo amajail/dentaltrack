@@ -14,7 +14,7 @@ public class Patient : BaseEntity
     public string? MedicalHistory { get; private set; }
     public string? Allergies { get; private set; }
     public bool IsActive { get; private set; } = true;
-    
+
     public ICollection<Treatment> Treatments { get; private set; } = new List<Treatment>();
 
     private Patient() { }
@@ -104,7 +104,7 @@ public class Patient : BaseEntity
     }
 
     public string GetFullName() => $"{FirstName} {LastName}";
-    
-    public int GetAge() => DateTime.Today.Year - DateOfBirth.Year - 
+
+    public int GetAge() => DateTime.Today.Year - DateOfBirth.Year -
         (DateTime.Today.DayOfYear < DateOfBirth.DayOfYear ? 1 : 0);
 }

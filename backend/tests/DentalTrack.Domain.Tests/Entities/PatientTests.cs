@@ -100,7 +100,7 @@ public class PatientTests
         var originalUpdatedAt = patient.UpdatedAt;
 
         // Act
-        patient.UpdatePersonalInfo("Jane", "Smith", "jane.smith@example.com", 
+        patient.UpdatePersonalInfo("Jane", "Smith", "jane.smith@example.com",
             new DateTime(1990, 3, 20), "555-9999", "456 Oak Ave");
 
         // Assert

@@ -39,7 +39,7 @@ public class PatientRepository : Repository<Patient>, IPatientRepository
     public async Task<bool> EmailExistsAsync(string email, Guid? excludePatientId = null, CancellationToken cancellationToken = default)
     {
         var query = _dbSet.Where(p => p.Email == email);
-        
+
         if (excludePatientId.HasValue)
         {
             query = query.Where(p => p.Id != excludePatientId.Value);
@@ -49,11 +49,11 @@ public class PatientRepository : Repository<Patient>, IPatientRepository
     }
 
     public async Task<(IList<Patient> Items, int TotalCount)> GetPagedAsync(
-        int page, 
-        int pageSize, 
-        string? search = null, 
-        string? sortBy = null, 
-        bool sortDescending = false, 
+        int page,
+        int pageSize,
+        string? search = null,
+        string? sortBy = null,
+        bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
         var query = _dbSet.Where(p => p.IsActive);
@@ -61,9 +61,9 @@ public class PatientRepository : Repository<Patient>, IPatientRepository
         // Apply search filter
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(p => 
-                p.FirstName.Contains(search) || 
-                p.LastName.Contains(search) || 
+            query = query.Where(p =>
+                p.FirstName.Contains(search) ||
+                p.LastName.Contains(search) ||
                 p.Email.Contains(search) ||
                 p.Phone.Contains(search));
         }

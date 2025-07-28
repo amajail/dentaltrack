@@ -30,7 +30,7 @@ public class DataSeeder
             }
 
             await SeedUsersAsync();
-            await SeedPatientsAsync(); 
+            await SeedPatientsAsync();
             await SeedTreatmentsAsync();
 
             await _context.SaveChangesAsync();
@@ -62,16 +62,16 @@ public class DataSeeder
         var patients = new[]
         {
             new Patient(
-                "Alice", "Johnson", "alice.johnson@email.com", 
+                "Alice", "Johnson", "alice.johnson@email.com",
                 new DateTime(1985, 3, 15), "555-0101", "Female",
                 "123 Main St, City, State 12345",
                 "Bob Johnson", "555-0102",
                 "No significant medical history",
                 "None known"),
-            
+
             new Patient(
                 "Bob", "Williams", "bob.williams@email.com",
-                new DateTime(1978, 7, 22), "555-0201", "Male", 
+                new DateTime(1978, 7, 22), "555-0201", "Male",
                 "456 Oak Ave, City, State 12345",
                 "Carol Williams", "555-0202",
                 "Hypertension, controlled with medication",
@@ -80,7 +80,7 @@ public class DataSeeder
             new Patient(
                 "Carol", "Brown", "carol.brown@email.com",
                 new DateTime(1992, 11, 8), "555-0301", "Female",
-                "789 Pine Rd, City, State 12345", 
+                "789 Pine Rd, City, State 12345",
                 "David Brown", "555-0302",
                 "Diabetes Type 2",
                 "Latex"),
@@ -89,7 +89,7 @@ public class DataSeeder
                 "David", "Davis", "david.davis@email.com",
                 new DateTime(1965, 1, 30), "555-0401", "Male",
                 "321 Elm St, City, State 12345",
-                "Emma Davis", "555-0402", 
+                "Emma Davis", "555-0402",
                 "Heart disease, previous surgery in 2015",
                 "Aspirin, Codeine"),
 
@@ -98,7 +98,7 @@ public class DataSeeder
                 new DateTime(1990, 9, 12), "555-0501", "Female",
                 "654 Maple Dr, City, State 12345",
                 "Frank Wilson", "555-0502",
-                "No significant medical history", 
+                "No significant medical history",
                 "None known")
         };
 
@@ -120,7 +120,7 @@ public class DataSeeder
         {
             var treatmentTypes = new[] { TreatmentType.Cleaning, TreatmentType.Filling, TreatmentType.RootCanal, TreatmentType.Crown };
             var selectedType = treatmentTypes[random.Next(treatmentTypes.Length)];
-            
+
             var treatment = new Treatment(
                 patient.Id,
                 selectedType,

@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
@@ -10,14 +10,18 @@ permissions:
   security-events: write
   actions: read
   contents: read
+  pull-requests: write
+  checks: write
 
 env:
   DOTNET_VERSION: '8.0.x'
   NODE_VERSION: '20.x'
+  BACKEND_COVERAGE_THRESHOLD: 35
+  FRONTEND_COVERAGE_THRESHOLD: 50
 
 jobs:
-  # Backend Tests
-  backend-test:
+  # Backend CI
+  backend-ci:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -31,23 +35,51 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
     
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    
     - name: Restore dependencies
       run: dotnet restore
     
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore --configuration Release
     
-    - name: Test
-      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage"
+    - name: Run tests with coverage
+      run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
     
-    - name: Upload coverage reports
+    - name: Generate coverage report
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.3.11
+      with:
+        reports: './backend/TestResults/**/coverage.cobertura.xml'
+        targetdir: './backend/coverage-report'
+        reporttypes: 'HtmlInline_AzurePipelines;Cobertura;TextSummary'
+    
+    - name: Check coverage threshold
+      run: |
+        COVERAGE=$(grep -o 'Line coverage: [0-9.]*%' ./coverage-report/Summary.txt | grep -o '[0-9.]*')
+        echo "Coverage: $COVERAGE%"
+        # Use awk instead of bc for floating point comparison
+        if awk -v cov="$COVERAGE" -v thresh="${{ env.BACKEND_COVERAGE_THRESHOLD }}" 'BEGIN { exit (cov < thresh) }'; then
+          echo "✅ Coverage $COVERAGE% meets threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
+        else
+          echo "❌ Coverage $COVERAGE% is below threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
+          exit 1
+        fi
+    
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
-        directory: ./backend/tests/*/TestResults
+        directory: ./backend/TestResults
         flags: backend
+        fail_ci_if_error: false
 
-  # Frontend Tests
-  frontend-test:
+  # Frontend CI
+  frontend-ci:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -72,66 +104,53 @@ jobs:
     - name: Type check
       run: npm run type-check
     
-    - name: Test
+    - name: Build
+      run: npm run build
+    
+    - name: Check bundle size
+      run: |
+        BUNDLE_SIZE=$(du -sk dist | cut -f1)
+        BUNDLE_SIZE_MB=$((BUNDLE_SIZE / 1024))
+        echo "Bundle size: ${BUNDLE_SIZE_MB}MB"
+        if [ $BUNDLE_SIZE_MB -gt 5 ]; then
+          echo "❌ Bundle size ${BUNDLE_SIZE_MB}MB exceeds 5MB limit"
+          exit 1
+        else
+          echo "✅ Bundle size ${BUNDLE_SIZE_MB}MB is within limits"
+        fi
+    
+    - name: Run tests with coverage
       run: npm run test:coverage
     
-    - name: Upload coverage reports
+    - name: Check coverage threshold
+      run: |
+        if [ -f coverage/coverage-summary.json ]; then
+          COVERAGE=$(node -p "Math.floor(JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct)")
+          echo "Coverage: $COVERAGE%"
+          if [ $COVERAGE -lt ${{ env.FRONTEND_COVERAGE_THRESHOLD }} ]; then
+            echo "❌ Coverage $COVERAGE% is below threshold ${{ env.FRONTEND_COVERAGE_THRESHOLD }}%"
+            exit 1
+          else
+            echo "✅ Coverage $COVERAGE% meets threshold ${{ env.FRONTEND_COVERAGE_THRESHOLD }}%"
+          fi
+        else
+          echo "⚠️ Coverage report not found, skipping check"
+        fi
+    
+    - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
         directory: ./frontend/coverage
         flags: frontend
+        fail_ci_if_error: false
 
-  # Build and Deploy
-  build-deploy:
-    needs: [backend-test, frontend-test]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    # Backend Build
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
-    
-    - name: Build Backend
-      run: |
-        cd backend
-        dotnet publish src/DentalTrack.Api/DentalTrack.Api.csproj -c Release -o ./publish
-    
-    # Frontend Build
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: './frontend/package-lock.json'
-    
-    - name: Build Frontend
-      run: |
-        cd frontend
-        npm ci
-        npm run build
-    
-    # Docker Build and Push (example for future deployment)
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Login to DockerHub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-      if: env.DOCKERHUB_USERNAME != null
-    
-    - name: Build and push Docker images
-      run: |
-        if [ ! -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
-          docker buildx build --platform linux/amd64,linux/arm64 -t ${{ secrets.DOCKERHUB_USERNAME }}/dentaltrack-api:latest ./backend --push
-          docker buildx build --platform linux/amd64,linux/arm64 -t ${{ secrets.DOCKERHUB_USERNAME }}/dentaltrack-web:latest ./frontend --push
-        fi
+  # Docker Build (DISABLED - Tech Debt)
+  # TODO: Re-enable when Docker Hub secrets are configured
+  # See GitHub issue for Docker implementation tech debt
+  # docker-build:
+  #   needs: [backend-ci, frontend-ci, security-scan]
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
 
   # Security Scan
   security-scan:
@@ -146,8 +165,30 @@ jobs:
         scan-ref: '.'
         format: 'sarif'
         output: 'trivy-results.sarif'
+        exit-code: '1'
+        severity: 'CRITICAL,HIGH'
     
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-results.sarif'
+      if: always()
+    
+    - name: OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'DentalTrack'
+        path: '.'
+        format: 'JSON'
+        out: 'reports'
+        args: >
+          --enableRetired
+          --enableExperimental
+          --failOnCVSS 7
+    
+    - name: Upload OWASP results
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-check-report
+        path: reports/
+      if: always()

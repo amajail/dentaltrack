@@ -39,16 +39,16 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() 
-    { 
-        Title = "DentalTrack API", 
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "DentalTrack API",
         Version = "v1",
         Description = "A comprehensive dental practice management system API built with Clean Architecture. " +
                      "Provides endpoints for managing patients, treatments, photos, and AI-powered dental analysis.",
         Contact = new() { Name = "DentalTrack Team", Email = "support@dentaltrack.com" },
         License = new() { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
     });
-    
+
     // Include XML comments for better documentation
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -60,7 +60,7 @@ builder.Services.AddSwaggerGen(c =>
     // Add response examples and better schemas
     c.EnableAnnotations();
     c.UseInlineDefinitionsForEnums();
-    
+
     // Group endpoints by tags
     c.TagActionsBy(api => new[] { api.GroupName ?? api.ActionDescriptor.RouteValues["controller"] });
     c.DocInclusionPredicate((name, api) => true);

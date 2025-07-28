@@ -30,7 +30,7 @@ public class GetAllTreatmentsHandler : IRequestHandler<GetAllTreatmentsQuery, Pa
             cancellationToken: cancellationToken);
 
         var treatmentDtos = _mapper.Map<IList<TreatmentDto>>(treatments.Items);
-        
+
         return new PagedResult<TreatmentDto>(treatmentDtos, treatments.TotalCount, request.Page, request.PageSize);
     }
 }

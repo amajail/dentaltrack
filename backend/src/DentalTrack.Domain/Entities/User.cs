@@ -72,7 +72,7 @@ public class User : BaseEntity
     }
 
     public string GetFullName() => $"{FirstName} {LastName}";
-    
+
     public bool IsDoctor() => Role == UserRole.Doctor;
     public bool IsAdmin() => Role == UserRole.Admin;
     public bool IsAssistant() => Role == UserRole.Assistant;

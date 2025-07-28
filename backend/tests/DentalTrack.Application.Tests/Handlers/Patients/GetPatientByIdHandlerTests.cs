@@ -29,7 +29,7 @@ public class GetPatientByIdHandlerTests
         var query = new GetPatientByIdQuery(patientId);
 
         var patient = new Patient("John", "Doe", "john.doe@email.com", DateTime.Now.AddYears(-30), "123-456-7890");
-        
+
         var patientDto = new PatientDto
         {
             Id = patientId,
@@ -41,7 +41,7 @@ public class GetPatientByIdHandlerTests
 
         _unitOfWorkMock.Setup(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(patient);
-        
+
         _mapperMock.Setup(x => x.Map<PatientDto>(patient))
             .Returns(patientDto);
 

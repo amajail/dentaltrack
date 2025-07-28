@@ -26,7 +26,7 @@ public class UserRepository : Repository<User>, IUserRepository
     public async Task<bool> EmailExistsAsync(string email, Guid? excludeUserId = null, CancellationToken cancellationToken = default)
     {
         var query = _context.Users.Where(u => u.Email == email);
-        
+
         if (excludeUserId.HasValue)
         {
             query = query.Where(u => u.Id != excludeUserId.Value);
@@ -38,7 +38,7 @@ public class UserRepository : Repository<User>, IUserRepository
     public async Task<bool> GoogleIdExistsAsync(string googleId, Guid? excludeUserId = null, CancellationToken cancellationToken = default)
     {
         var query = _context.Users.Where(u => u.GoogleId == googleId);
-        
+
         if (excludeUserId.HasValue)
         {
             query = query.Where(u => u.Id != excludeUserId.Value);

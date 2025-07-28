@@ -28,7 +28,7 @@ public class CreateTreatmentHandlerTests
         // Arrange
         var patientId = Guid.NewGuid();
         var treatmentId = Guid.NewGuid();
-        
+
         var createTreatmentDto = new CreateTreatmentDto
         {
             PatientId = patientId,
@@ -42,7 +42,7 @@ public class CreateTreatmentHandlerTests
         var command = new CreateTreatmentCommand(createTreatmentDto);
 
         var patient = new Patient("John", "Doe", "john.doe@email.com", DateTime.Now.AddYears(-30), "123-456-7890");
-        
+
         var treatment = new Treatment(
             patientId,
             TreatmentType.Cleaning,
@@ -63,16 +63,16 @@ public class CreateTreatmentHandlerTests
 
         _unitOfWorkMock.Setup(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(patient);
-        
+
         _mapperMock.Setup(x => x.Map<Treatment>(createTreatmentDto))
             .Returns(treatment);
-        
+
         _mapperMock.Setup(x => x.Map<TreatmentDto>(treatment))
             .Returns(treatmentDto);
 
         _unitOfWorkMock.Setup(x => x.Treatments.AddAsync(treatment, It.IsAny<CancellationToken>()))
             .ReturnsAsync(treatment);
-        
+
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
@@ -100,7 +100,7 @@ public class CreateTreatmentHandlerTests
     {
         // Arrange
         var patientId = Guid.NewGuid();
-        
+
         var createTreatmentDto = new CreateTreatmentDto
         {
             PatientId = patientId,
@@ -114,9 +114,9 @@ public class CreateTreatmentHandlerTests
             .ReturnsAsync((Patient?)null);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _handler.Handle(command, CancellationToken.None));
-        
+
         Assert.Contains($"Patient with ID {patientId} not found", exception.Message);
 
         _unitOfWorkMock.Verify(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()), Times.Once);

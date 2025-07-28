@@ -26,8 +26,8 @@ public static class AnalysisStatusExtensions
 
     public static bool IsFinished(this AnalysisStatus status)
     {
-        return status == AnalysisStatus.Completed || 
-               status == AnalysisStatus.Failed || 
+        return status == AnalysisStatus.Completed ||
+               status == AnalysisStatus.Failed ||
                status == AnalysisStatus.Cancelled;
     }
 

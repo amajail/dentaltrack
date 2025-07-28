@@ -22,12 +22,12 @@ public class GetTreatmentsByPatientHandlerTests
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockTreatmentRepository = new Mock<ITreatmentRepository>();
-        
+
         var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
         _mapper = config.CreateMapper();
-        
+
         _mockUnitOfWork.Setup(x => x.Treatments).Returns(_mockTreatmentRepository.Object);
-        
+
         _handler = new GetTreatmentsByPatientHandler(_mockUnitOfWork.Object, _mapper);
     }
 
@@ -64,13 +64,13 @@ public class GetTreatmentsByPatientHandlerTests
         resultList[0].PatientId.Should().Be(patientId);
         resultList[0].Type.Should().Be(TreatmentType.Cleaning);
         resultList[0].Title.Should().Be("Routine Cleaning");
-        
+
         resultList[1].PatientId.Should().Be(patientId);
         resultList[1].Type.Should().Be(TreatmentType.Filling);
         resultList[1].Title.Should().Be("Cavity Filling");
 
         _mockTreatmentRepository.Verify(
-            x => x.GetByPatientIdAsync(patientId, It.IsAny<CancellationToken>()), 
+            x => x.GetByPatientIdAsync(patientId, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -94,7 +94,7 @@ public class GetTreatmentsByPatientHandlerTests
         result.Should().BeEmpty();
 
         _mockTreatmentRepository.Verify(
-            x => x.GetByPatientIdAsync(patientId, It.IsAny<CancellationToken>()), 
+            x => x.GetByPatientIdAsync(patientId, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -105,11 +105,11 @@ public class GetTreatmentsByPatientHandlerTests
         var patientId = Guid.NewGuid();
         var patient = new Patient("Test", "Patient", "test@example.com", new DateTime(1980, 6, 15));
         var treatment = new Treatment(
-            patientId, 
-            TreatmentType.RootCanal, 
-            "Root Canal Treatment", 
-            "Root canal on tooth #8", 
-            1200.00m, 
+            patientId,
+            TreatmentType.RootCanal,
+            "Root Canal Treatment",
+            "Root canal on tooth #8",
+            1200.00m,
             DateTime.UtcNow);
 
         // Set the Patient property for mapping

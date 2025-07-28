@@ -30,7 +30,7 @@ public class MappingProfileTests
         // Arrange
         var patient = new Patient(
             "John",
-            "Doe", 
+            "Doe",
             "john@example.com",
             new DateTime(1985, 5, 15),
             "555-1234",
@@ -169,9 +169,9 @@ public class MappingProfileTests
     {
         // Arrange
         var metadata = new PhotoMetadata(
-            1920, 
-            1080, 
-            "Canon EOS R5", 
+            1920,
+            1080,
+            "Canon EOS R5",
             "Canon",
             new DateTime(2024, 1, 15),
             "Clinic",

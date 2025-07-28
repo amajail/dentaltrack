@@ -15,7 +15,7 @@ public class Treatment : BaseEntity
     public decimal? EstimatedCost { get; private set; }
     public decimal? ActualCost { get; private set; }
     public string? Notes { get; private set; }
-    
+
     public ICollection<Photo> Photos { get; private set; } = new List<Photo>();
     public ICollection<Analysis> Analyses { get; private set; } = new List<Analysis>();
 
@@ -93,10 +93,10 @@ public class Treatment : BaseEntity
     {
         if (EndDate.HasValue)
             return EndDate.Value - StartDate;
-        
+
         if (Status == TreatmentStatus.InProgress)
             return DateTime.UtcNow - StartDate;
-            
+
         return null;
     }
 

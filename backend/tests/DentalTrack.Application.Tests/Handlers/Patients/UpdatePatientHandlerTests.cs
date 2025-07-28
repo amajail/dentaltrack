@@ -26,7 +26,7 @@ public class UpdatePatientHandlerTests
     {
         // Arrange
         var patientId = Guid.NewGuid();
-        
+
         var updatePatientDto = new UpdatePatientDto
         {
             FirstName = "Jane",
@@ -44,7 +44,7 @@ public class UpdatePatientHandlerTests
         var command = new UpdatePatientCommand(patientId, updatePatientDto);
 
         var existingPatient = new Patient("John", "Doe", "john.doe@email.com", DateTime.Now.AddYears(-30), "123-456-7890");
-        
+
         var updatedPatientDto = new PatientDto
         {
             Id = patientId,
@@ -56,16 +56,16 @@ public class UpdatePatientHandlerTests
 
         _unitOfWorkMock.Setup(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPatient);
-        
+
         _unitOfWorkMock.Setup(x => x.Patients.EmailExistsAsync(updatePatientDto.Email, patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         _unitOfWorkMock.Setup(x => x.Patients.UpdateAsync(existingPatient, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        
+
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
-        
+
         _mapperMock.Setup(x => x.Map<PatientDto>(existingPatient))
             .Returns(updatedPatientDto);
 
@@ -92,7 +92,7 @@ public class UpdatePatientHandlerTests
     {
         // Arrange
         var patientId = Guid.NewGuid();
-        
+
         var updatePatientDto = new UpdatePatientDto
         {
             FirstName = "Jane",
@@ -106,9 +106,9 @@ public class UpdatePatientHandlerTests
             .ReturnsAsync((Patient?)null);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _handler.Handle(command, CancellationToken.None));
-        
+
         Assert.Contains($"Patient with ID {patientId} not found", exception.Message);
 
         _unitOfWorkMock.Verify(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()), Times.Once);
@@ -122,7 +122,7 @@ public class UpdatePatientHandlerTests
     {
         // Arrange
         var patientId = Guid.NewGuid();
-        
+
         var updatePatientDto = new UpdatePatientDto
         {
             FirstName = "Jane",
@@ -136,14 +136,14 @@ public class UpdatePatientHandlerTests
 
         _unitOfWorkMock.Setup(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPatient);
-        
+
         _unitOfWorkMock.Setup(x => x.Patients.EmailExistsAsync(updatePatientDto.Email, patientId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _handler.Handle(command, CancellationToken.None));
-        
+
         Assert.Contains($"Patient with email {updatePatientDto.Email} already exists", exception.Message);
 
         _unitOfWorkMock.Verify(x => x.Patients.GetByIdAsync(patientId, It.IsAny<CancellationToken>()), Times.Once);

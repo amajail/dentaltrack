@@ -77,12 +77,12 @@ public class TreatmentRepository : Repository<Treatment>, ITreatmentRepository
     }
 
     public async Task<(IList<Treatment> Items, int TotalCount)> GetPagedAsync(
-        int page, 
-        int pageSize, 
-        Guid? patientId = null, 
-        string? status = null, 
-        string? sortBy = null, 
-        bool sortDescending = false, 
+        int page,
+        int pageSize,
+        Guid? patientId = null,
+        string? status = null,
+        string? sortBy = null,
+        bool sortDescending = false,
         CancellationToken cancellationToken = default)
     {
         var query = _dbSet.Include(t => t.Patient).AsQueryable();

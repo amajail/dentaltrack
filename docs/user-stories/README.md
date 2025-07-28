@@ -11,7 +11,7 @@
 
 | Epic | User Stories | Sprint | Priority | Status |
 |------|-------------|--------|----------|--------|
-| [🔧 Setup Inicial](#epic-1-setup-inicial) | 4 | Sprint 0 | High | 📋 Ready |
+| [🔧 Setup Inicial](#epic-1-setup-inicial) | 4 | Sprint 0 | High | 🔄 In Progress (2/4 completed) |
 | [🌐 Web API](#epic-2-web-api) | 3 | Sprint 1 | High | 📋 Ready |
 | [⚛️ React Web App](#epic-3-react-web-app) | 3 | Sprint 1-2 | High | 📋 Ready |
 | [🔐 Autenticación](#epic-6-autenticación) | 3 | Sprint 1-2 | High | 📋 Ready |
@@ -26,15 +26,17 @@
 
 ### User Stories
 
-| ID | Título | Estimación | Dependencias |
-|----|--------|------------|--------------|
-| [US-001](./epic-1-setup/US-001.md) | Configurar monorepo con estructura Clean Architecture | L | - |
-| [US-002](./epic-1-setup/US-002.md) | Configurar GitHub repository y Projects | M | US-001 |
-| [US-003](./epic-1-setup/US-003.md) | Configurar GitHub Actions CI/CD pipeline | L | US-001, US-002 |
-| [US-004](./epic-1-setup/US-004.md) | Configurar infraestructura Azure completa | XL | US-001 |
+| ID | Título | Estimación | Dependencias | Status |
+|----|--------|------------|--------------|--------|
+| [US-001](./epic-1-setup/US-001.md) | Configurar monorepo con estructura Clean Architecture | L | - | ✅ **COMPLETED** |
+| [US-002](./epic-1-setup/US-002.md) | Configurar GitHub repository y Projects | M | US-001 | 📋 Ready |
+| [US-003](./epic-1-setup/US-003.md) | Configurar GitHub Actions CI/CD pipeline | L | US-001, US-002 | ✅ **COMPLETED** |
+| [US-004](./epic-1-setup/US-004.md) | Configurar infraestructura Azure completa | XL | US-001 | 📋 Ready |
+| [US-004b](./epic-1-setup/US-004b.md) | Activar y validar CI/CD pipeline | S | US-003 | 📋 Ready |
 
 **Sprint**: Sprint 0  
-**Duración estimada**: 2 semanas
+**Duración estimada**: 2 semanas  
+**Progreso**: 2/5 user stories completed (40%)
 
 ---
 

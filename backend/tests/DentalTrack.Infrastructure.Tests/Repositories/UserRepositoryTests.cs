@@ -171,7 +171,7 @@ public class UserRepositoryTests : TestBase
         var activeUser1 = new User("active1@example.com", "John", "Doe", UserRole.Doctor);
         var activeUser2 = new User("active2@example.com", "Jane", "Smith", UserRole.Assistant);
         var inactiveUser = new User("inactive@example.com", "Bob", "Johnson", UserRole.Admin);
-        
+
         inactiveUser.Deactivate();
 
         await Context.Users.AddRangeAsync(activeUser1, activeUser2, inactiveUser);

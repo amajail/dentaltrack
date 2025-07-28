@@ -68,7 +68,7 @@ public class PatientsController : ControllerBase
     public async Task<ActionResult<PatientDto>> GetPatient(Guid id)
     {
         var patient = await _mediator.Send(new GetPatientByIdQuery(id));
-        
+
         if (patient == null)
         {
             return NotFound($"Patient with ID {id} not found");
@@ -144,7 +144,7 @@ public class PatientsController : ControllerBase
         try
         {
             var result = await _mediator.Send(new DeletePatientCommand(id));
-            
+
             if (!result)
             {
                 return NotFound($"Patient with ID {id} not found");
