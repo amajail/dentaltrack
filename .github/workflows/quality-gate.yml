@@ -20,6 +20,8 @@ env:
 jobs:
   code-quality:
     runs-on: ubuntu-latest
+    outputs:
+      bundle-size-mb: ${{ steps.bundle-check.outputs.bundle-size-mb }}
     
     steps:
     - uses: actions/checkout@v4
@@ -72,20 +74,18 @@ jobs:
         npm run test:coverage
     
     - name: Check frontend bundle size
+      id: bundle-check
       run: |
         cd frontend
         npm run build
         BUNDLE_SIZE=$(du -sk dist | cut -f1)
         BUNDLE_SIZE_MB=$((BUNDLE_SIZE / 1024))
         echo "Bundle size: ${BUNDLE_SIZE_MB}MB"
-        echo "BUNDLE_SIZE_MB=${BUNDLE_SIZE_MB}" >> $GITHUB_ENV
+        echo "bundle-size-mb=${BUNDLE_SIZE_MB}" >> $GITHUB_OUTPUT
         
         if [ $BUNDLE_SIZE_MB -gt 5 ]; then
           echo "::error::Bundle size ${BUNDLE_SIZE_MB}MB exceeds 5MB limit"
-          echo "BUNDLE_SIZE_STATUS=❌ Too large" >> $GITHUB_ENV
           exit 1
-        else
-          echo "BUNDLE_SIZE_STATUS=✅ Within limits" >> $GITHUB_ENV
         fi
 
   security-analysis:
@@ -192,6 +192,9 @@ jobs:
 
   coverage-analysis:
     runs-on: ubuntu-latest
+    outputs:
+      backend-coverage: ${{ steps.backend-coverage.outputs.coverage }}
+      frontend-coverage: ${{ steps.frontend-coverage.outputs.coverage }}
     
     steps:
     - uses: actions/checkout@v4
@@ -222,23 +225,25 @@ jobs:
         reporttypes: 'TextSummary'
     
     - name: Check backend coverage
+      id: backend-coverage
       run: |
         cd backend
         if [ -f coverage-report/Summary.txt ]; then
           COVERAGE=$(grep -o 'Line coverage: [0-9.]*%' coverage-report/Summary.txt | grep -o '[0-9.]*' || echo "0")
           echo "Backend coverage: $COVERAGE%"
-          echo "BACKEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          echo "coverage=${COVERAGE}" >> $GITHUB_OUTPUT
           
           # Use awk instead of bc for floating point comparison
           if awk -v cov="$COVERAGE" -v thresh="${{ env.BACKEND_COVERAGE_THRESHOLD }}" 'BEGIN { exit (cov < thresh) }'; then
-            echo "BACKEND_COVERAGE_STATUS=✅ Meets threshold" >> $GITHUB_ENV
+            echo "Backend coverage meets threshold"
           else
-            echo "BACKEND_COVERAGE_STATUS=❌ Below threshold" >> $GITHUB_ENV
             echo "::warning::Backend coverage $COVERAGE% is below threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
+            exit 1
           fi
         else
-          echo "BACKEND_COVERAGE_STATUS=⚠️ Report not found" >> $GITHUB_ENV
+          echo "coverage=0" >> $GITHUB_OUTPUT
           echo "::warning::Backend coverage report not found"
+          exit 1
         fi
     
     - name: Generate frontend coverage
@@ -248,22 +253,24 @@ jobs:
         npm run test:coverage
     
     - name: Check frontend coverage
+      id: frontend-coverage
       run: |
         cd frontend
         if [ -f coverage/coverage-summary.json ]; then
           COVERAGE=$(node -p "Math.floor(JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct)" || echo "0")
           echo "Frontend coverage: $COVERAGE%"
-          echo "FRONTEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          echo "coverage=${COVERAGE}" >> $GITHUB_OUTPUT
           
           if [ $COVERAGE -lt ${{ env.FRONTEND_COVERAGE_THRESHOLD }} ]; then
-            echo "FRONTEND_COVERAGE_STATUS=❌ Below threshold" >> $GITHUB_ENV
             echo "::warning::Frontend coverage $COVERAGE% is below threshold ${{ env.FRONTEND_COVERAGE_THRESHOLD }}%"
+            exit 1
           else
-            echo "FRONTEND_COVERAGE_STATUS=✅ Meets threshold" >> $GITHUB_ENV
+            echo "Frontend coverage meets threshold"
           fi
         else
-          echo "FRONTEND_COVERAGE_STATUS=⚠️ Report not found" >> $GITHUB_ENV
+          echo "coverage=0" >> $GITHUB_OUTPUT
           echo "::warning::Frontend coverage report not found"
+          exit 1
         fi
 
   quality-gate-summary:
@@ -288,15 +295,12 @@ jobs:
           console.log('SECURITY_STATUS:', process.env.SECURITY_STATUS);
           console.log('PERF_STATUS:', process.env.PERF_STATUS);
           
+          // Get data from job outputs
+          const bundleSizeMB = '${{ needs.code-quality.outputs.bundle-size-mb }}' || 'N/A';
+          const backendCoverage = '${{ needs.coverage-analysis.outputs.backend-coverage }}' || 'N/A';
+          const frontendCoverage = '${{ needs.coverage-analysis.outputs.frontend-coverage }}' || 'N/A';
+          
           const { 
-            BUNDLE_SIZE_MB, 
-            BUNDLE_SIZE_STATUS, 
-            SECURITY_STATUS, 
-            PERF_STATUS, 
-            BACKEND_COVERAGE, 
-            BACKEND_COVERAGE_STATUS, 
-            FRONTEND_COVERAGE, 
-            FRONTEND_COVERAGE_STATUS,
             BACKEND_COVERAGE_THRESHOLD,
             FRONTEND_COVERAGE_THRESHOLD
           } = process.env;
@@ -315,8 +319,8 @@ jobs:
           const coveragePassed = '${{ needs.coverage-analysis.result }}' === 'success';
           
           // Check coverage thresholds - if coverage analysis job passed, assume coverage is OK
-          const backendCoverageNum = parseFloat(BACKEND_COVERAGE) || 0;
-          const frontendCoverageNum = parseFloat(FRONTEND_COVERAGE) || 0;
+          const backendCoverageNum = parseFloat(backendCoverage) || 0;
+          const frontendCoverageNum = parseFloat(frontendCoverage) || 0;
           const backendThreshold = parseFloat(BACKEND_COVERAGE_THRESHOLD) || 35;
           const frontendThreshold = parseFloat(FRONTEND_COVERAGE_THRESHOLD) || 50;
           
@@ -324,17 +328,17 @@ jobs:
           console.log(`Backend: ${backendCoverageNum}% >= ${backendThreshold}%`);
           console.log(`Frontend: ${frontendCoverageNum}% >= ${frontendThreshold}%`);
           
-          // If coverage analysis job passed but we don't have the env vars, assume it's OK
-          const backendCoveragePassed = coveragePassed && (backendCoverageNum >= backendThreshold || !BACKEND_COVERAGE);
-          const frontendCoveragePassed = coveragePassed && (frontendCoverageNum >= frontendThreshold || !FRONTEND_COVERAGE);
+          // If coverage analysis job passed, coverage meets threshold
+          const backendCoveragePassed = coveragePassed;
+          const frontendCoveragePassed = coveragePassed;
           
           const results = [
             { check: 'Code Quality', status: codeQualityPassed ? '✅ Passed' : '❌ Failed' },
             { check: 'Security Scan', status: securityPassed ? '✅ Passed' : '❌ Failed' },
             { check: 'Performance Tests', status: perfPassed ? '✅ Passed' : '❌ Failed' },
-            { check: 'Backend Coverage', status: backendCoveragePassed ? `✅ Passed (${BACKEND_COVERAGE || 'N/A'}%)` : `❌ Failed (${BACKEND_COVERAGE || 'N/A'}%)` },
-            { check: 'Frontend Coverage', status: frontendCoveragePassed ? `✅ Passed (${FRONTEND_COVERAGE || 'N/A'}%)` : `❌ Failed (${FRONTEND_COVERAGE || 'N/A'}%)` },
-            { check: 'Bundle Size', status: BUNDLE_SIZE_STATUS && BUNDLE_SIZE_STATUS.includes('✅') ? `✅ Passed (${BUNDLE_SIZE_MB || 'N/A'}MB)` : `✅ Passed (${BUNDLE_SIZE_MB || 'N/A'}MB)` }
+            { check: 'Backend Coverage', status: backendCoveragePassed ? `✅ Passed (${backendCoverage}%)` : `❌ Failed (${backendCoverage}%)` },
+            { check: 'Frontend Coverage', status: frontendCoveragePassed ? `✅ Passed (${frontendCoverage}%)` : `❌ Failed (${frontendCoverage}%)` },
+            { check: 'Bundle Size', status: codeQualityPassed ? `✅ Passed (${bundleSizeMB}MB)` : `❌ Failed (${bundleSizeMB}MB)` }
           ];
           
           const passed = codeQualityPassed && securityPassed && perfPassed && 
@@ -364,12 +368,12 @@ jobs:
           ### Coverage Thresholds
           - Backend Required: ${backendThreshold}%
           - Frontend Required: ${frontendThreshold}%
-          - Backend: ${BACKEND_COVERAGE || 'N/A'}%
-          - Frontend: ${FRONTEND_COVERAGE || 'N/A'}%
+          - Backend: ${backendCoverage}%
+          - Frontend: ${frontendCoverage}%
           
           ### Performance Budgets
           - Bundle Size Limit: 5MB
-          - Current: ${BUNDLE_SIZE_MB || 'N/A'}MB
+          - Current: ${bundleSizeMB}MB
           - JS Bundle Target: ≤450KB (Current: ~428KB)
           - Total Bundle Target: ≤600KB
           `;
