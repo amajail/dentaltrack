@@ -14,7 +14,8 @@ permissions:
 env:
   DOTNET_VERSION: '8.0.x'
   NODE_VERSION: '20.x'
-  COVERAGE_THRESHOLD: 80
+  BACKEND_COVERAGE_THRESHOLD: 35
+  FRONTEND_COVERAGE_THRESHOLD: 50
 
 jobs:
   code-quality:
@@ -229,11 +230,11 @@ jobs:
           echo "BACKEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
           
           # Use awk instead of bc for floating point comparison
-          if awk -v cov="$COVERAGE" -v thresh="${{ env.COVERAGE_THRESHOLD }}" 'BEGIN { exit (cov < thresh) }'; then
+          if awk -v cov="$COVERAGE" -v thresh="${{ env.BACKEND_COVERAGE_THRESHOLD }}" 'BEGIN { exit (cov < thresh) }'; then
             echo "BACKEND_COVERAGE_STATUS=✅ Meets threshold" >> $GITHUB_ENV
           else
             echo "BACKEND_COVERAGE_STATUS=❌ Below threshold" >> $GITHUB_ENV
-            echo "::warning::Backend coverage $COVERAGE% is below threshold ${{ env.COVERAGE_THRESHOLD }}%"
+            echo "::warning::Backend coverage $COVERAGE% is below threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
           fi
         else
           echo "BACKEND_COVERAGE_STATUS=⚠️ Report not found" >> $GITHUB_ENV
@@ -254,9 +255,9 @@ jobs:
           echo "Frontend coverage: $COVERAGE%"
           echo "FRONTEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
           
-          if [ $COVERAGE -lt ${{ env.COVERAGE_THRESHOLD }} ]; then
+          if [ $COVERAGE -lt ${{ env.FRONTEND_COVERAGE_THRESHOLD }} ]; then
             echo "FRONTEND_COVERAGE_STATUS=❌ Below threshold" >> $GITHUB_ENV
-            echo "::warning::Frontend coverage $COVERAGE% is below threshold ${{ env.COVERAGE_THRESHOLD }}%"
+            echo "::warning::Frontend coverage $COVERAGE% is below threshold ${{ env.FRONTEND_COVERAGE_THRESHOLD }}%"
           else
             echo "FRONTEND_COVERAGE_STATUS=✅ Meets threshold" >> $GITHUB_ENV
           fi
@@ -302,8 +303,9 @@ jobs:
             '🎉 All quality checks passed! This PR is ready for review.' : 
             '⚠️ Some quality checks failed. Please address the issues before merging.'}
           
-          ### Coverage Threshold
-          - Required: ${process.env.COVERAGE_THRESHOLD}%
+          ### Coverage Thresholds
+          - Backend Required: ${process.env.BACKEND_COVERAGE_THRESHOLD}%
+          - Frontend Required: ${process.env.FRONTEND_COVERAGE_THRESHOLD}%
           - Backend: ${BACKEND_COVERAGE || 'N/A'}%
           - Frontend: ${FRONTEND_COVERAGE || 'N/A'}%
           

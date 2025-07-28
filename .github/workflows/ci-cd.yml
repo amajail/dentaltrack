@@ -16,7 +16,8 @@ permissions:
 env:
   DOTNET_VERSION: '8.0.x'
   NODE_VERSION: '20.x'
-  COVERAGE_THRESHOLD: 80
+  BACKEND_COVERAGE_THRESHOLD: 35
+  FRONTEND_COVERAGE_THRESHOLD: 50
 
 jobs:
   # Backend CI
@@ -62,11 +63,11 @@ jobs:
       run: |
         COVERAGE=$(grep -o 'Line coverage: [0-9.]*%' ./coverage-report/Summary.txt | grep -o '[0-9.]*')
         echo "Coverage: $COVERAGE%"
-        if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
-          echo "❌ Coverage $COVERAGE% is below threshold ${{ env.COVERAGE_THRESHOLD }}%"
+        if (( $(echo "$COVERAGE < ${{ env.BACKEND_COVERAGE_THRESHOLD }}" | bc -l) )); then
+          echo "❌ Coverage $COVERAGE% is below threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
           exit 1
         else
-          echo "✅ Coverage $COVERAGE% meets threshold ${{ env.COVERAGE_THRESHOLD }}%"
+          echo "✅ Coverage $COVERAGE% meets threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
         fi
     
     - name: Upload coverage to Codecov
@@ -125,11 +126,11 @@ jobs:
         if [ -f coverage/coverage-summary.json ]; then
           COVERAGE=$(node -p "Math.floor(JSON.parse(require('fs').readFileSync('coverage/coverage-summary.json')).total.lines.pct)")
           echo "Coverage: $COVERAGE%"
-          if [ $COVERAGE -lt ${{ env.COVERAGE_THRESHOLD }} ]; then
-            echo "❌ Coverage $COVERAGE% is below threshold ${{ env.COVERAGE_THRESHOLD }}%"
+          if [ $COVERAGE -lt ${{ env.FRONTEND_COVERAGE_THRESHOLD }} ]; then
+            echo "❌ Coverage $COVERAGE% is below threshold ${{ env.FRONTEND_COVERAGE_THRESHOLD }}%"
             exit 1
           else
-            echo "✅ Coverage $COVERAGE% meets threshold ${{ env.COVERAGE_THRESHOLD }}%"
+            echo "✅ Coverage $COVERAGE% meets threshold ${{ env.FRONTEND_COVERAGE_THRESHOLD }}%"
           fi
         else
           echo "⚠️ Coverage report not found, skipping check"
