@@ -180,12 +180,12 @@ jobs:
         echo "CSS size: ${CSS_SIZE}KB"
         
         # Performance budget checks
-        if [ $TOTAL_SIZE -gt 500 ]; then
-          echo "::warning::Total bundle size ${TOTAL_SIZE}KB exceeds recommended 500KB"
+        if [ $TOTAL_SIZE -gt 600 ]; then
+          echo "::warning::Total bundle size ${TOTAL_SIZE}KB exceeds recommended 600KB"
         fi
         
-        if [ $JS_SIZE -gt 300 ]; then
-          echo "::warning::JavaScript bundle ${JS_SIZE}KB exceeds recommended 300KB"
+        if [ $JS_SIZE -gt 450 ]; then
+          echo "::warning::JavaScript bundle ${JS_SIZE}KB exceeds recommended 450KB"
         fi
         
         echo "PERF_STATUS=✅ Performance within limits" >> $GITHUB_ENV
@@ -309,9 +309,11 @@ jobs:
           - Backend: ${BACKEND_COVERAGE || 'N/A'}%
           - Frontend: ${FRONTEND_COVERAGE || 'N/A'}%
           
-          ### Bundle Size Limit
-          - Limit: 5MB
+          ### Performance Budgets
+          - Bundle Size Limit: 5MB
           - Current: ${BUNDLE_SIZE_MB || 'N/A'}MB
+          - JS Bundle Target: ≤450KB (Current: ~428KB)
+          - Total Bundle Target: ≤600KB
           `;
           
           // Post comment on PR

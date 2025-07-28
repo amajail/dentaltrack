@@ -5,15 +5,16 @@ Improve code quality, test coverage, and technical foundation to support long-te
 
 ## 📊 Epic Status
 - **Status**: 📋 Ready for Development
-- **Priority**: High (Quality Gate Blocker)
-- **Sprint**: Sprint 3
-- **Story Points**: 13 total
+- **Priority**: High (Quality Gate & Performance)
+- **Sprint**: Sprint 3-4
+- **Story Points**: 18 total
 
 ## 📋 User Stories
 
-| ID | Título | Estimación | Status | Blocker |
-|----|--------|------------|--------|---------|
-| [US-TD01](./US-TD01.md) | Improve test coverage to 80% (Backend & Frontend) | XL (13 pts) | 📋 Ready | Quality Gate |
+| ID | Título | Estimación | Status | Sprint |
+|----|--------|------------|--------|--------|
+| [US-TD01](./US-TD01.md) | Improve test coverage to 80% (Backend & Frontend) | XL (13 pts) | 📋 Ready | Sprint 3 |
+| [US-TD02](./US-TD02.md) | Optimize frontend bundle size and performance | L (5 pts) | 📋 Ready | Sprint 4 |
 
 ## 🎯 Epic Goals
 
