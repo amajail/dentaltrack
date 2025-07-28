@@ -111,3 +111,6 @@ if (app.Environment.IsDevelopment())
 Log.Information("DentalTrack API starting up...");
 
 app.Run();
+
+// Make Program class accessible for integration testing
+public partial class Program { }
