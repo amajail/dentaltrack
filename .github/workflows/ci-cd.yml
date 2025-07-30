@@ -49,7 +49,7 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
     
-    - name: Run tests with coverage (Domain and Application only)
+    - name: Run tests with coverage (Domain and Application layers)
       run: |
         dotnet test tests/DentalTrack.Domain.Tests/DentalTrack.Domain.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
         dotnet test tests/DentalTrack.Application.Tests/DentalTrack.Application.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults

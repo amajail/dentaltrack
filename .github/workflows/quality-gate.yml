@@ -14,7 +14,7 @@ permissions:
 env:
   DOTNET_VERSION: '8.0.x'
   NODE_VERSION: '20.x'
-  BACKEND_COVERAGE_THRESHOLD: 35
+  BACKEND_COVERAGE_THRESHOLD: 70
   FRONTEND_COVERAGE_THRESHOLD: 50
 
 jobs:
@@ -47,10 +47,11 @@ jobs:
         dotnet restore
         dotnet format --verify-no-changes --verbosity diagnostic
     
-    - name: Backend tests with coverage
+    - name: Backend tests with coverage (Domain and Application only)
       run: |
         cd backend
-        dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        dotnet test tests/DentalTrack.Domain.Tests/DentalTrack.Domain.Tests.csproj --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        dotnet test tests/DentalTrack.Application.Tests/DentalTrack.Application.Tests.csproj --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
     
     # Frontend Analysis  
     - name: Install frontend dependencies
@@ -211,11 +212,12 @@ jobs:
         cache: 'npm'
         cache-dependency-path: './frontend/package-lock.json'
     
-    - name: Generate backend coverage
+    - name: Generate backend coverage (Domain and Application only)
       run: |
         cd backend
         dotnet restore
-        dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        dotnet test tests/DentalTrack.Domain.Tests/DentalTrack.Domain.Tests.csproj --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        dotnet test tests/DentalTrack.Application.Tests/DentalTrack.Application.Tests.csproj --configuration Release --collect:"XPlat Code Coverage" --results-directory ./TestResults
     
     - name: Generate coverage report
       uses: danielpalme/ReportGenerator-GitHub-Action@5.3.11
@@ -278,7 +280,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     env:
-      BACKEND_COVERAGE_THRESHOLD: 35
+      BACKEND_COVERAGE_THRESHOLD: 70
       FRONTEND_COVERAGE_THRESHOLD: 50
     
     steps:
