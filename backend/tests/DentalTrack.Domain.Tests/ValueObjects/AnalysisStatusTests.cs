@@ -135,15 +135,15 @@ public class AnalysisStatusTests
         // Only failed analyses can be retried
         AnalysisStatus.Failed.CanBeRetried().Should().BeTrue();
         AnalysisStatus.Completed.CanBeRetried().Should().BeFalse();
-        
+
         // Only processing analyses are active
         AnalysisStatus.Processing.IsActive().Should().BeTrue();
         AnalysisStatus.Pending.IsActive().Should().BeFalse();
-        
+
         // Finished analyses cannot be active
         AnalysisStatus.Completed.IsFinished().Should().BeTrue();
         AnalysisStatus.Completed.IsActive().Should().BeFalse();
-        
+
         // Active analyses are not finished
         AnalysisStatus.Processing.IsActive().Should().BeTrue();
         AnalysisStatus.Processing.IsFinished().Should().BeFalse();

@@ -119,17 +119,17 @@ public class PhotoQualityTests
         // Photos that require review should not be acceptable
         PhotoQuality.Pending.RequiresReview().Should().BeTrue();
         PhotoQuality.Pending.IsAcceptable().Should().BeFalse();
-        
+
         PhotoQuality.Low.RequiresReview().Should().BeTrue();
         PhotoQuality.Low.IsAcceptable().Should().BeFalse();
-        
+
         // Photos that are acceptable should not require review
         PhotoQuality.Medium.IsAcceptable().Should().BeTrue();
         PhotoQuality.Medium.RequiresReview().Should().BeFalse();
-        
+
         PhotoQuality.High.IsAcceptable().Should().BeTrue();
         PhotoQuality.High.RequiresReview().Should().BeFalse();
-        
+
         PhotoQuality.Excellent.IsAcceptable().Should().BeTrue();
         PhotoQuality.Excellent.RequiresReview().Should().BeFalse();
     }
@@ -151,7 +151,7 @@ public class PhotoQualityTests
         PhotoQuality.Medium.IsAcceptable().Should().BeTrue();
         PhotoQuality.High.IsAcceptable().Should().BeTrue();
         PhotoQuality.Excellent.IsAcceptable().Should().BeTrue();
-        
+
         // Below Medium should not be acceptable
         PhotoQuality.Low.IsAcceptable().Should().BeFalse();
         PhotoQuality.Pending.IsAcceptable().Should().BeFalse();

@@ -104,7 +104,7 @@ public class PatientsControllerTests : IntegrationTestBase
         // Verify in database
         var dbPatient = await ExecuteDbContextAsync(async context =>
             await context.Patients.FirstOrDefaultAsync(p => p.Email == "create@test.com"));
-        
+
         dbPatient.Should().NotBeNull();
         dbPatient!.FirstName.Should().Be("John");
     }
@@ -150,7 +150,7 @@ public class PatientsControllerTests : IntegrationTestBase
         // Verify in database
         var dbPatient = await ExecuteDbContextAsync(async context =>
             await context.Patients.FirstOrDefaultAsync(p => p.Id == patientId));
-        
+
         dbPatient.Should().NotBeNull();
         dbPatient!.FirstName.Should().Be("Updated");
     }
@@ -190,7 +190,7 @@ public class PatientsControllerTests : IntegrationTestBase
         // Verify deleted from database
         var dbPatient = await ExecuteDbContextAsync(async context =>
             await context.Patients.FirstOrDefaultAsync(p => p.Id == patientId));
-        
+
         dbPatient.Should().BeNull();
     }
 

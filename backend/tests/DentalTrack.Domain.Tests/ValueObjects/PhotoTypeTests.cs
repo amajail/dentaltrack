@@ -223,7 +223,7 @@ public class PhotoTypeTests
     {
         // All X-Ray types should require special handling
         var allXRayTypes = Enum.GetValues<PhotoType>().Where(t => t.IsXRay());
-        
+
         foreach (var type in allXRayTypes)
         {
             type.RequiresSpecialHandling().Should().BeTrue();
@@ -248,7 +248,7 @@ public class PhotoTypeTests
         PhotoType.Before.GetDisplayName().Should().Be("Before Photo");
         PhotoType.After.GetDisplayName().Should().Be("After Photo");
         PhotoType.Progress.GetDisplayName().Should().Be("Progress Photo");
-        
+
         // These should not be X-Rays
         PhotoType.Before.IsXRay().Should().BeFalse();
         PhotoType.After.IsXRay().Should().BeFalse();

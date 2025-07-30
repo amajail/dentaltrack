@@ -109,7 +109,7 @@ public class StartTreatmentHandlerTests
             Times.Never);
     }
 
-    [Fact]  
+    [Fact]
     public async Task Handle_WithTreatmentAlreadyStarted_ShouldThrowInvalidOperationException()
     {
         // Arrange
@@ -123,7 +123,7 @@ public class StartTreatmentHandlerTests
             estimatedCost: 500m,
             startDate: DateTime.UtcNow.AddDays(1)
         );
-        
+
         // Start the treatment first
         treatment.Start();
 

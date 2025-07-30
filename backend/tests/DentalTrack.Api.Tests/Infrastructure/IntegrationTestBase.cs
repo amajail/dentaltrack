@@ -41,7 +41,7 @@ public class IntegrationTestBase : IClassFixture<IntegrationTestWebApplicationFa
     {
         using var scope = Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<DentalTrackDbContext>();
-        
+
         var result = await action(context);
         return result;
     }
@@ -50,7 +50,7 @@ public class IntegrationTestBase : IClassFixture<IntegrationTestWebApplicationFa
     {
         using var scope = Factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<DentalTrackDbContext>();
-        
+
         await action(context);
     }
 }

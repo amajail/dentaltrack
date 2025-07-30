@@ -8,6 +8,7 @@ import { AppProvider } from '../context/AppContext'
 import { theme } from '../theme/theme'
 
 // Create a custom render function that includes providers
+// eslint-disable-next-line react-refresh/only-export-components
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -107,5 +108,6 @@ export const createMockTreatment = () => ({
 })
 
 // Re-export everything from React Testing Library
+// eslint-disable-next-line react-refresh/only-export-components
 export * from '@testing-library/react'
 export { customRender as render }

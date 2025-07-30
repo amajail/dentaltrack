@@ -175,10 +175,10 @@ public class AnalysisTypeTests
         // Assert that AI-based types have appropriate display names
         AnalysisType.CariesDetection.IsAIBased().Should().BeTrue();
         AnalysisType.CariesDetection.GetDisplayName().Should().Contain("Detection");
-        
+
         AnalysisType.TreatmentPlanning.IsAIBased().Should().BeTrue();
         AnalysisType.TreatmentPlanning.GetDisplayName().Should().Contain("Planning");
-        
+
         AnalysisType.AnomalyDetection.IsAIBased().Should().BeTrue();
         AnalysisType.AnomalyDetection.GetDisplayName().Should().Contain("Detection");
     }
@@ -188,14 +188,14 @@ public class AnalysisTypeTests
     {
         // AI-based types should have meaningful descriptions
         var aiBasedTypes = Enum.GetValues<AnalysisType>().Where(t => t.IsAIBased());
-        
+
         foreach (var type in aiBasedTypes)
         {
             var description = type.GetDescription();
             description.Should().NotBeNullOrEmpty($"AI-based type {type} should have a description");
             description.Should().NotBe("Unknown analysis type", $"AI-based type {type} should have a proper description");
         }
-        
+
         // Verify specific AI-based behaviors
         AnalysisType.CariesDetection.IsAIBased().Should().BeTrue();
         AnalysisType.PlaqueAnalysis.IsAIBased().Should().BeTrue();
@@ -203,7 +203,7 @@ public class AnalysisTypeTests
         AnalysisType.AnomalyDetection.IsAIBased().Should().BeTrue();
         AnalysisType.TreatmentPlanning.IsAIBased().Should().BeTrue();
         AnalysisType.RiskAssessment.IsAIBased().Should().BeTrue();
-        
+
         // Non-AI types should not be AI-based
         AnalysisType.ToothAlignment.IsAIBased().Should().BeFalse();
         AnalysisType.ColorMatching.IsAIBased().Should().BeFalse();

@@ -31,7 +31,7 @@ public class TreatmentsControllerTests : IntegrationTestBase
     {
         // Arrange
         var patient = TestDataFactory.CreateTestPatient();
-        
+
         await ExecuteDbContextAsync(async context =>
         {
             context.Patients.Add(patient);
@@ -39,7 +39,7 @@ public class TreatmentsControllerTests : IntegrationTestBase
         });
 
         var treatment = TestDataFactory.CreateTestTreatment(patient.Id);
-        
+
         await ExecuteDbContextAsync(async context =>
         {
             context.Treatments.Add(treatment);
@@ -63,7 +63,7 @@ public class TreatmentsControllerTests : IntegrationTestBase
     {
         // Arrange
         var patient = TestDataFactory.CreateTestPatient();
-        
+
         await ExecuteDbContextAsync(async context =>
         {
             context.Patients.Add(patient);
@@ -107,7 +107,7 @@ public class TreatmentsControllerTests : IntegrationTestBase
     {
         // Arrange
         var patient = TestDataFactory.CreateTestPatient();
-        
+
         await ExecuteDbContextAsync(async context =>
         {
             context.Patients.Add(patient);
@@ -123,7 +123,7 @@ public class TreatmentsControllerTests : IntegrationTestBase
             estimatedCost: 200m,
             startDate: DateTime.UtcNow
         );
-        
+
         await ExecuteDbContextAsync(async context =>
         {
             context.Treatments.AddRange(treatment1, treatment2);
@@ -169,7 +169,7 @@ public class TreatmentsControllerTests : IntegrationTestBase
         // Verify in database
         var dbTreatment = await ExecuteDbContextAsync(async context =>
             await context.Treatments.FirstOrDefaultAsync(t => t.PatientId == patient.Id));
-        
+
         dbTreatment.Should().NotBeNull();
         dbTreatment!.Title.Should().Be("Teeth Whitening Treatment");
     }
@@ -192,7 +192,7 @@ public class TreatmentsControllerTests : IntegrationTestBase
     {
         // Arrange
         var patient = TestDataFactory.CreateTestPatient();
-        
+
         await ExecuteDbContextAsync(async context =>
         {
             context.Patients.Add(patient);
@@ -226,7 +226,7 @@ public class TreatmentsControllerTests : IntegrationTestBase
         // Verify in database
         var dbTreatment = await ExecuteDbContextAsync(async context =>
             await context.Treatments.FirstOrDefaultAsync(t => t.Id == treatmentId));
-        
+
         dbTreatment.Should().NotBeNull();
         dbTreatment!.Title.Should().Be("Updated Treatment");
     }
@@ -250,7 +250,7 @@ public class TreatmentsControllerTests : IntegrationTestBase
     {
         // Arrange
         var patient = TestDataFactory.CreateTestPatient();
-        
+
         await ExecuteDbContextAsync(async context =>
         {
             context.Patients.Add(patient);
@@ -274,7 +274,7 @@ public class TreatmentsControllerTests : IntegrationTestBase
         // Verify deleted from database
         var dbTreatment = await ExecuteDbContextAsync(async context =>
             await context.Treatments.FirstOrDefaultAsync(t => t.Id == treatmentId));
-        
+
         dbTreatment.Should().BeNull();
     }
 
