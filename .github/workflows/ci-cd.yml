@@ -16,7 +16,7 @@ permissions:
 env:
   DOTNET_VERSION: '8.0.x'
   NODE_VERSION: '20.x'
-  BACKEND_COVERAGE_THRESHOLD: 35
+  BACKEND_COVERAGE_THRESHOLD: 70
   FRONTEND_COVERAGE_THRESHOLD: 50
 
 jobs:
@@ -49,8 +49,10 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
     
-    - name: Run tests with coverage
-      run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+    - name: Run tests with coverage (Domain and Application layers)
+      run: |
+        dotnet test tests/DentalTrack.Domain.Tests/DentalTrack.Domain.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        dotnet test tests/DentalTrack.Application.Tests/DentalTrack.Application.Tests.csproj --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
     
     - name: Generate coverage report
       uses: danielpalme/ReportGenerator-GitHub-Action@5.3.11
