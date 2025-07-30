@@ -1,0 +1,86 @@
+name: Backend CI with Docker
+# Alternative CI configuration that includes API integration tests with Docker
+
+on:
+  workflow_dispatch: # Manual trigger only for now
+  # push:
+  #   branches: [ main, develop ]
+  #   paths: [ 'backend/**' ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  BACKEND_COVERAGE_THRESHOLD: 80
+
+jobs:
+  backend-ci-full:
+    runs-on: ubuntu-latest
+    
+    services:
+      sql-server:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: DentalTrack123!
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P DentalTrack123! -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+    
+    - name: Run all tests with coverage (including API tests)
+      run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+      env:
+        ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=DentalTrackTest;User Id=sa;Password=DentalTrack123!;TrustServerCertificate=true;"
+    
+    - name: Generate coverage report
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.3.11
+      with:
+        reports: './backend/TestResults/**/coverage.cobertura.xml'
+        targetdir: './backend/coverage-report'
+        reporttypes: 'HtmlInline_AzurePipelines;Cobertura;TextSummary'
+    
+    - name: Check coverage threshold
+      run: |
+        COVERAGE=$(grep -o 'Line coverage: [0-9.]*%' ./coverage-report/Summary.txt | grep -o '[0-9.]*')
+        echo "Coverage: $COVERAGE%"
+        if awk -v cov="$COVERAGE" -v thresh="${{ env.BACKEND_COVERAGE_THRESHOLD }}" 'BEGIN { exit (cov < thresh) }'; then
+          echo "✅ Coverage $COVERAGE% meets threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
+        else
+          echo "❌ Coverage $COVERAGE% is below threshold ${{ env.BACKEND_COVERAGE_THRESHOLD }}%"
+          exit 1
+        fi
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        directory: ./backend/TestResults
+        flags: backend-full
+        fail_ci_if_error: false
